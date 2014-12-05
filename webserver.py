@@ -1,14 +1,16 @@
-from flask import Flask, render_template
-import datetime
+from flask import Flask, render_template, request
+import datetime, json
 app = Flask(__name__)
 
 @app.route("/", methods=['GET', 'POST'])
 def hello():
-   now = datetime.datetime.now()
-   timeString = now.strftime("%Y-%m-%d %H:%M")
+   # now = datetime.datetime.now()
+   # timeString = now.strftime("%Y-%m-%d %H:%M")
+   response = request.get_json()
+   string = response['ref']
    templateData = {
       'title' : 'HELLO!',
-      'time': timeString
+      'ref': string
       }
    return render_template('main.html', **templateData)
 
