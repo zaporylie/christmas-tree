@@ -1,6 +1,12 @@
 from flask import Flask, render_template, request
 import datetime, json, time, requests, yaml
+import array, fcntl, time, signal, sys, getopt
 app = Flask(__name__)
+
+spi = file("/dev/spidev0.0", "wb")
+fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
+rgb = bytearray(3)
+step = 0
 
 @app.route("/", methods=['GET'])
 def index():
@@ -18,7 +24,9 @@ def endpoint():
 
   if event == "push":
     ref = response['ref']
-    message = push(ref)
+    master_branch = response['repository']['master_branch']
+    commits = len(response['commits'])
+    message = push(ref, master_branch, commits)
     send_to_hipchat(message)
   elif event == "create":
     ref = response['ref']
@@ -32,10 +40,14 @@ def endpoint():
 
   return 'ok', 200
 
-def push(ref):
+def push(ref, master_branch, commits):
   # do something
-  time.sleep(1)
-  return 'test'
+  if ref == master_branch:
+    minus(commits)
+    return 'boooooo! -' +  str(commits) + ' for you :/'
+  else:
+    plus(commits)
+    return 'Good job! +' + str(commits) + ' for you'
 
 def create(ref):
   # do something
@@ -46,6 +58,43 @@ def pull_request():
   # do something
   time.sleep(1)
   return 'test'
+
+def plus(number):
+  global step
+  step = step + number
+  set()
+
+def minus(number):
+  global step
+  step = step - number
+  set()
+
+def set():
+  global step
+  file = open('recipes.json')
+  recipes = json.load(file)
+  file.close()
+  if step > recipes['length'] - 1:
+    step = recipes['length'] - 1
+    for i in range(0, recipes['length']):
+      led(recipes['max'])
+  elif step < 0:
+    step = 0
+    for i in range(0, recipes['length']):
+      led(recipes['min'])
+  else:
+    print 'step:' + str(step)
+    for i in range(0, recipes['length']):
+      print str(i)
+      led(recipes['steps'][step][i])
+
+  spi.flush()
+
+def led(colors):
+  rgb[0] = colors['r']
+  rgb[1] = colors['g']
+  rgb[2] = colors['b']
+  spi.write(rgb)
 
 def send_to_hipchat(message):
   stream = open(".settings", 'r')
@@ -61,6 +110,6 @@ def send_to_hipchat(message):
   r = requests.post(host + path, data=data, headers=headers)
   # r = requests.post('http://requestb.in/u3x5yau3', data=r.text, headers=headers)
   # r = requests.post('http://requestb.in/u3x5yau3', data=data, headers=headers)
-  
+
 if __name__ == "__main__":
-   app.run(host='0.0.0.0', port=80, debug=True)
+  app.run(host='0.0.0.0', port=80, debug=True)
