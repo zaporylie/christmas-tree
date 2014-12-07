@@ -88,11 +88,15 @@ def push(response):
   master_branch = response['repository']['master_branch']
   sender = response['sender']
   points = len(response['commits'])
+  is_merged = response['head_commit']['message'].startswith('Merge pull request')
 
   # do something
-  if branch == master_branch:
+  if branch == master_branch and not is_merged:
     GITree.minus(points)
     Message('minus', sender, points)
+  elif branch == master_branch and is_merged:
+    GITree.plus(3)
+    Message('minus', sender, 3)
   else:
     GITree.plus(points)
     Message('plus', sender, points)
@@ -104,6 +108,10 @@ def create(sender):
 def pull_request(sender):
   GITree.plus(2)
   Message('plus', sender, 2)
+
+def issue_comment(sender):
+  GITree.plus(1)
+  Message('plus', sender, 1)
 
 
 # define new Christmas tree object
@@ -128,6 +136,8 @@ def endpoint():
     create(response['sender'])
   elif event == "pull_request":
     pull_request(response['sender'])
+  elif event == "issue_comment":
+    issue_comment(response['sender'])
   else:
     return 'This event is not yet supported', 200
 
