@@ -105,6 +105,10 @@ def pull_request(sender):
   GITree.plus(2)
   Message('plus', sender, 2)
 
+def issue_comment(sender):
+  GITree.plus(1)
+  Message('plus', sender, 1)
+
 
 # define new Christmas tree object
 GITree = ChristmasTree()
@@ -128,6 +132,8 @@ def endpoint():
     create(response['sender'])
   elif event == "pull_request":
     pull_request(response['sender'])
+  elif event == "issue_comment":
+    issue_comment(response['sender'])
   else:
     return 'This event is not yet supported', 200
 
