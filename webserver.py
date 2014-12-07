@@ -1,44 +1,45 @@
 from flask import Flask, render_template, request
 import datetime, json, time, requests, yaml
-import array, fcntl, time, signal, sys, random
+import array, fcntl, time, signal, sys, random, re
 app = Flask(__name__)
 
 spi = file("/dev/spidev0.0", "wb")
 fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
 
-def push(ref, master_branch, commits):
-  # do something
-  if ref == master_branch:
-    GITree.minus(commits)
-  else:
-    GITree.plus(commits)
+# Message Class
+class Message:
+  def __init__(self, direction, sender, points):
+    stream = open(".settings", 'r')
+    self.settings = yaml.load(stream)
 
-def create(ref):
-  # do something
-  time.sleep(1)
-  return 'test'
+    self.message = '<table><tr><td>' + self.senderAvatar(sender) + '</td><td>' + self.getRandomText(direction) % {'author': self.senderName(sender), 'number': points} + '</td></tr></table>'
 
-def pull_request():
-  # do something
-  time.sleep(1)
-  return 'test'
+    self.send()
 
+  def getRandomText(self, direction):
+    if direction == 'plus':
+      self.color = 'green'
+      return random.choice(self.settings[direction])
+    elif direction == 'minus':
+      self.color = 'red'
+      return random.choice(self.settings[direction])
+    else:
+      return 'Unknown text'
 
+  def senderName(self, sender):
+    return '<a href="' + sender['html_url'] + '">' + sender['login'] + '</a>'
 
-def send_to_hipchat(message):
-  stream = open(".settings", 'r')
-  settings = yaml.load(stream)
+  def senderAvatar(self, sender):
+    return '<img src="' + sender['avatar_url'] + '" width="48" height="48" Hspace="2" Vspace="2" />'
 
-  host = 'https://api.hipchat.com'
-  path = '/v1/rooms/message'
+  def send(self):
+    host = 'https://api.hipchat.com'
+    path = '/v1/rooms/message'
+    headers = { 'Content-type': 'application/x-www-form-urlencoded', 'User-Agent': 'RaspberryPi' }
+    data = { 'room_id': self.settings['room_id'], 'from': self.settings['author'], 'message': self.message, 'message_format': 'html', 'color': self.color, 'format': 'json', 'auth_token': self.settings['hipchat_secret'] }
+    r = requests.post(host + path, data=data, headers=headers)
 
-  headers = { 'Content-type': 'application/x-www-form-urlencoded', 'User-Agent': 'RaspberryPi' }
-  data = { 'room_id': settings['room_id'], 'from': settings['author'], 'message': message, 'message_format': 'html', 'color': 'green', 'format': 'json', 'auth_token': settings['hipchat_secret'] }
-
-  r = requests.post(host + path, data=data, headers=headers)
-  # r = requests.post('http://requestb.in/u3x5yau3', data=r.text, headers=headers)
-  # r = requests.post('http://requestb.in/u3x5yau3', data=data, headers=headers)
-
+# Christmas Tree class
 class ChristmasTree:
   value = 0;
   settings = [];
@@ -63,12 +64,6 @@ class ChristmasTree:
       self.value = 0
     self.set()
 
-  def getRandomText(self, direction):
-    if direction == 'plus' or direction == 'minus':
-      return random.choice(self.settings[direction])
-    else:
-      return 'Unknown text'
-
   def set(self):
     for i in range(0, self.settings['num_leds']):
       try:
@@ -84,6 +79,32 @@ class ChristmasTree:
     rgb[1] = color['g']
     rgb[2] = color['b']
     spi.write(rgb)
+
+
+def push(response):
+  branch = response['ref']
+  if branch.startswith('refs/heads/'):
+    branch = re.sub('refs/heads/', '', branch);
+  master_branch = response['repository']['master_branch']
+  sender = response['sender']
+  points = len(response['commits'])
+
+  # do something
+  if branch == master_branch:
+    GITree.minus(points)
+    Message('minus', sender, points)
+  else:
+    GITree.plus(points)
+    Message('plus', sender, points)
+
+def create(sender):
+  GITree.plus(2)
+  Message('plus', sender, 2)
+
+def pull_request(sender):
+  GITree.plus(2)
+  Message('plus', sender, 2)
+
 
 # define new Christmas tree object
 GITree = ChristmasTree()
@@ -101,19 +122,14 @@ def endpoint():
 
   # Get JSON from input.
   response = request.get_json()
-
   if event == "push":
-    ref = response['ref']
-    master_branch = response['repository']['master_branch']
-    commits = len(response['commits'])
-    push(ref, master_branch, commits)
+    push(response)
   elif event == "create":
-    ref = response['ref']
-    create(ref)
+    create(response['sender'])
   elif event == "pull_request":
-    pull_request()
+    pull_request(response['sender'])
   else:
-    return 'This event is not supported', 200
+    return 'This event is not yet supported', 200
 
   return 'ok', 200
 
