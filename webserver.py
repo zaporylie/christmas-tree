@@ -96,7 +96,7 @@ def push(response):
     Message('minus', sender, points)
   elif branch == master_branch and is_merged:
     GITree.plus(3)
-    Message('minus', sender, 3)
+    Message('plus', sender, 3)
   else:
     GITree.plus(points)
     Message('plus', sender, points)
