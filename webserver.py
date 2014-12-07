@@ -88,11 +88,15 @@ def push(response):
   master_branch = response['repository']['master_branch']
   sender = response['sender']
   points = len(response['commits'])
+  is_merged = response['head_commit']['message'].startswith('Merge pull request')
 
   # do something
-  if branch == master_branch:
+  if branch == master_branch and not is_merged:
     GITree.minus(points)
     Message('minus', sender, points)
+  elif branch == master_branch and is_merged:
+    GITree.plus(3)
+    Message('minus', sender, 3)
   else:
     GITree.plus(points)
     Message('plus', sender, points)
