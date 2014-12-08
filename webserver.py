@@ -12,7 +12,7 @@ class Message:
     stream = open(".settings", 'r')
     self.settings = yaml.load(stream)
 
-    self.message = '<table><tr><td>' + self.senderAvatar(sender) + '</td><td>' + self.getRandomText(direction) % {'author': self.senderName(sender), 'number': points} + '</td></tr></table>'
+    self.message = '<table style="width: 100%"><tr><td>' + self.senderAvatar(sender) + '</td><td>' + self.getRandomText(direction) % {'author': self.senderName(sender), 'number': points} + '</td></tr></table>'
 
     self.send()
 
@@ -30,7 +30,7 @@ class Message:
     return '<a href="' + sender['html_url'] + '">' + sender['login'] + '</a>'
 
   def senderAvatar(self, sender):
-    return '<img src="' + sender['avatar_url'] + '" width="48" height="48" Hspace="2" Vspace="2" />'
+    return '<img src="' + sender['avatar_url'] + '" width="32" height="32" hspace="5" vspace="5" />'
 
   def send(self):
     host = 'https://api.hipchat.com'
