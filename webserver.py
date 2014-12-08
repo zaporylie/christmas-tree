@@ -54,8 +54,8 @@ class ChristmasTree:
 
   def plus(self, number):
     self.value += number
-    if self.value >= len(self.settings['steps']):
-      self.value = len(self.settings['steps']) - 1
+    if self.value >= 50:
+      self.value = 49
     self.set()
 
   def minus(self, number):
@@ -66,9 +66,11 @@ class ChristmasTree:
 
   def set(self):
     for i in range(0, self.settings['num_leds']):
-      try:
-        self.writeLed(self.settings['steps'][self.value][i])
-      except:
+      if i == 49:
+        self.writeLed({'r': 255, 'g': 255, 'b': 0})
+      elif i < self.value:
+        self.writeLed({'r': 0, 'g': 255, 'b': 0})
+      else:
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
     spi.flush()
