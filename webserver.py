@@ -65,11 +65,29 @@ class ChristmasTree:
     self.set()
 
   def set(self):
+
+    # Get random colored lights
+    rand = []
+    rand.append(random.randint(0,8))
+    rand.append(random.randint(9,16))
+    rand.append(random.randint(17,24))
+    rand.append(random.randint(25,32))
+    rand.append(random.randint(33,40))
+    rand.append(random.randint(41,48))
+
     for i in range(0, self.settings['num_leds']):
-      if i == 49:
-        self.writeLed({'r': 255, 'g': 255, 'b': 0})
+      if i < self.value and i in rand:
+        self.writeLed(
+          {
+            'r': random.randint(0,255),
+            'g': random.randint(0,10),
+            'b': random.randint(0,10)
+          }
+        )
+      elif i == 49 and self.value == 49:
+        self.writeLed({'r': 255, 'g': 150, 'b': 0})
       elif i < self.value:
-        self.writeLed({'r': 0, 'g': 255, 'b': 0})
+        self.writeLed({'r': 0, 'g': 200, 'b': 0})
       else:
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
