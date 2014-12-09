@@ -137,6 +137,18 @@ class ChristmasTree:
         time.sleep(json['sleep'])
       except:
         print('No sleep value')
+        
+  def on(self, json):
+    tmp = self.value
+    self.value = 49
+    self.set()
+    self.value = tmp
+    
+  def off(self, json):
+    tmp = self.value
+    self.value = 0
+    self.set()
+    self.value = tmp
 
 def push(response):
   branch = response['ref']
@@ -209,6 +221,10 @@ def play():
   response = request.get_json()
   if response['type'] == "blink":
     GITree.blinkMode(response)
+  elif response['type'] == "on":
+    GITree.on(response)
+  elif response['type'] == "off":
+    GITree.off(response)
   else:
     return 'This event is not yet supported', 200
 
