@@ -107,6 +107,22 @@ class ChristmasTree:
     rgb[2] = color['b']
     spi.write(rgb)
 
+  def blinkMode(self, json):
+    self.getSettings()
+    for i in range(0, json['loops']):
+      for j in range(0, self.settings['num_leds']):
+        try:
+          json['loops'][j]
+        except NameError:
+          self.writeLed({'r': 0, 'g': 0, 'b': 0})
+        else:
+          self.writeLed(json['loops'][j])
+
+      spi.flush()
+      time.sleep(json['sleep'])
+      # Zero out the leds.
+      for i in range(0, self.settings['num_leds']):
+        self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
 def push(response):
   branch = response['ref']
@@ -169,6 +185,23 @@ def endpoint():
     return 'This event is not yet supported', 200
 
   return 'ok', 200
+
+@app.route("/play", methods=['GET', 'POST'])
+def play():
+  if request.headers.get('Awesome-Security') is None:
+    return "Awesome-Security is enabled", 400;
+
+  # Get JSON from input.
+  response = request.get_json()
+  if response['type'] == "blink":
+    GITree.blinkMode(response)
+  else:
+    return 'This event is not yet supported', 200
+
+  # This should restore it to it's old form.
+  GITree.set()
+  return 'ok', 200
+
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=80, debug=True)
