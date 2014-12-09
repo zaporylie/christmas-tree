@@ -8,12 +8,16 @@ fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
 
 # Message Class
 class Message:
-  def __init__(self, direction, sender, points):
+  def getSettings(self):
+    stream = open(".settings.strings", 'r')
+    x = yaml.load(stream)
     stream = open(".settings", 'r')
-    self.settings = yaml.load(stream)
+    y = yaml.load(stream)
+    self.settings = dict(x.items() + y.items())
 
+  def __init__(self, direction, sender, points):
+    self.getSettings()
     self.message = '<table style="width: 100%"><tr><td>' + self.senderAvatar(sender) + '</td><td>' + self.getRandomText(direction) % {'author': self.senderName(sender), 'number': points} + '</td></tr></table>'
-
     self.send()
 
   def getRandomText(self, direction):
@@ -45,7 +49,10 @@ class ChristmasTree:
   settings = [];
 
   def __init__(self):
-    self.value = 0;
+    self.getSettings()
+    self.value = self.settings['initial_value']
+
+  def getSettings(self):
     stream = open(".settings", 'r')
     self.settings = yaml.load(stream)
 
@@ -65,7 +72,7 @@ class ChristmasTree:
     self.set()
 
   def set(self):
-
+    self.getSettings()
     # Get random colored lights
     rand = []
     rand.append(random.randint(0,8))
