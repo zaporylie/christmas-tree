@@ -182,7 +182,7 @@ def endpoint():
   return 'ok', 200
 
 @app.route("/custom", methods=['GET', 'POST'])
-def endpoint():
+def custom():
   if request.headers.get('Awesome-Security') is None:
     return "Awesome-Security is enabled", 400;
 
