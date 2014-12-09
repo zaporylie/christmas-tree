@@ -112,11 +112,9 @@ class ChristmasTree:
     for i in range(0, json['loops']):
       for j in range(0, self.settings['num_leds']):
         try:
-          json['loops'][j]
-        except NameError:
-          self.writeLed({'r': 0, 'g': 0, 'b': 0})
-        else:
           self.writeLed(json['loops'][j])
+        except:
+          self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
       spi.flush()
       time.sleep(json['sleep'])
