@@ -5,3 +5,4 @@ plus:
 minus:
   - 'Oh no... minus %(number)s for you. How dare you?!'
   - 'You s!@# :/ minus %(number)s because of you'
+  - 'Należy starać %(author)'
