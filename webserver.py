@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import datetime, json, time, requests, yaml
 import array, fcntl, time, signal, sys, random, re
 app = Flask(__name__)
@@ -218,25 +218,44 @@ def play():
     return "Awesome-Security is enabled", 400;
 
   # Get JSON from input.
-  response = request.get_json()
-  if response['type'] == "blink":
-    GITree.blinkMode(response)
-  elif response['type'] == "on":
-    GITree.on(response)
-  elif response['type'] == "off":
-    GITree.off(response)
+  json = request.get_json()
+
+  if json['type'] == "blink":
+    GITree.blinkMode(json)
+  elif json['type'] == "on":
+    GITree.on(json)
+  elif json['type'] == "off":
+    GITree.off(json)
   else:
-    text = 'This event isnot supported yet'
+    error = 'This event is not supported yet'
 
   # This should restore it to it's old form.
-  if response['restore'] == True: 
+  try:
+    if json['restore'] == True:
+      GITree.set()
+  except:
     GITree.set()
 
   try:
-    return text, 200
+    response = {
+      'status': 'error',
+      'message': error
+    }
   except:
-    return 'ok', 200
+    response = {
+      'status': 'ok',
+    }
+  print(response)
+  return jsonify(**response), 200
 
+@app.route("/interface", methods=['GET'])
+def interface():
+  templateData = {
+    'value': GITree.getValue(),
+    'max': GITree.settings['num_leds'],
+    'percentage': (float(GITree.getValue()) / float(GITree.settings['num_leds'])) * 100
+  }
+  return render_template('interface.html', **templateData)
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=80, debug=True)

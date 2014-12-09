@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>ChristmasGITree</title>
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.0/flatly/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      $( document ).ready(function() {
+        $('button.on').click(function () {
+          $.ajax({
+            url: "/play",
+            method: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+              'Awesome-Security': 'Value'
+            },
+            data: JSON.stringify({
+              'type': 'on',
+              'restore': false
+            })
+          }).done(function(data) {
+            $("#console").prepend("<div>Done!</div>");
+          });
+        });
+        $('button.off').click(function () {
+          $.ajax({
+            url: "/play",
+            method: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+              'Awesome-Security': 'Value'
+            },
+            data: JSON.stringify({
+              'type': 'off',
+              'restore': false
+            })
+          }).done(function(data) {
+            $("#console").prepend("<div>Done!</div>");
+          });
+        });
+      });
+    </script>
+    <style>
+      #console {
+        max-height: 100px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Manage ChristmasGITree</h1>
+    <p>Let us light up christmas tree together.</p>
+    <button type="button" class="btn btn-default on">Turn lights on!</button>
+    <button type="button" class="btn btn-default off">Turn lights off!</button>
+    <br />
+    {{ value }} <br />
+    {{ max }} <br />
+    <div class="progress progress-striped active">
+      <div class="progress-bar" style="width: {{ percentage }}%"></div>
+    </div>
+    <br />
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Panel info</h3>
+      </div>
+      <div class="panel-body" id="console">
+        <div>Results:</div>
+      </div>
+    </div>
+  </body>
+</html>
