@@ -9,4 +9,4 @@ minus:
   - 'Oh no... minus %(number)s. How dare you?!'
   - '%(author)s s!@# :/ minus %(number)s because of you'
   - 'I am shame on %(author)s. -%(number)s'
-  - '%(author)s does not know what he\'s doing! -%(number)s for him!'
+  - '%(author)s does not know what he''s doing! -%(number)s for him!'
