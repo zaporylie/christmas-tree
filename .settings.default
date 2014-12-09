@@ -3,10 +3,4 @@ hipchat_secret: ''
 github_secret: ''
 author: 'ChristmasGITree'
 num_leds: 50
-plus:
-  - 'Thanks %(author)s. You have just earned %(number)s point(s) for our team. Good job!'
-  - 'Well done %(author)s! %(number)s point(s) for you'
-  - 'Great job %(author)s. +%(number)s for you'
-minus:
-  - 'Oh no... minus %(number)s for you. How dare you?!'
-  - 'You s!@# :/ minus %(number)s because of you'
+initial_value: 0
