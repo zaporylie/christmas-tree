@@ -109,18 +109,34 @@ class ChristmasTree:
 
   def blinkMode(self, json):
     self.getSettings()
+    try:
+      json['loops']
+    except:
+      print('No loops in your request')
+      return false
+    
     for i in range(0, json['loops']):
       for j in range(0, self.settings['num_leds']):
         try:
-          self.writeLed(json['loops'][j])
+          # test
+          self.writeLed(json['values'][j])
         except:
           self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
       spi.flush()
-      time.sleep(json['sleep'])
+      try:
+        time.sleep(json['sleep'])
+      except:
+        print('No sleep value')
+      
       # Zero out the leds.
       for i in range(0, self.settings['num_leds']):
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
+      spi.flush()
+      try:
+        time.sleep(json['sleep'])
+      except:
+        print('No sleep value')
 
 def push(response):
   branch = response['ref']
