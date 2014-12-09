@@ -2,6 +2,7 @@ plus:
   - 'Thanks %(author)s. You have just earned %(number)s point(s) for our team. Good job!'
   - 'Well done %(author)s! %(number)s point(s) for you'
   - 'Great job %(author)s. +%(number)s for you'
+  - 'Wesołych Świąt %(author). +%(number)!'
 minus:
   - 'Oh no... minus %(number)s for you. How dare you?!'
   - 'You s!@# :/ minus %(number)s because of you'
