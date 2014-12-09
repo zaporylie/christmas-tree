@@ -226,11 +226,16 @@ def play():
   elif response['type'] == "off":
     GITree.off(response)
   else:
-    return 'This event is not yet supported', 200
+    text = 'This event isnot supported yet'
 
   # This should restore it to it's old form.
-  GITree.set()
-  return 'ok', 200
+  if response['restore'] == True: 
+    GITree.set()
+
+  try:
+    return text, 200
+  except:
+    return 'ok', 200
 
 
 if __name__ == "__main__":
