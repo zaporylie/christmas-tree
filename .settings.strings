@@ -4,7 +4,7 @@ plus:
   - 'Great job %(author)s. +%(number)s for you'
   - 'Wesołych Świąt %(author)s. +%(number)s!'
   - 'God jul %(author)s. +%(number)s!'
-  - '%(number)s point for Gryffindor!'
+  - '%(number)s point(s) for Gryffindor!'
 minus:
   - 'Oh no... minus %(number)s. How dare you?!'
   - '%(author)s s!@# :/ minus %(number)s because of you'
