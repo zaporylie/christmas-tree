@@ -150,6 +150,30 @@ class ChristmasTree:
     self.set()
     self.value = tmp
 
+  def sequence(self, json):
+    # Store original value, so we can restore it when we are finished.
+    tmp = self.value
+
+    if json['sequence'] == 'oddeven':
+      odd = True
+      for i in range(0, self.settings['num_leds']):
+        if odd == True:
+          self.writeLed({'r': 0, 'g': 200, 'b': 0})
+          odd = False
+        else:
+          self.writeLed({'r': 0, 'g': 0, 'b': 0})
+          odd = True
+    
+    elif json['sequence'] == 'stepup':
+      for i in range(0, self.settings['num_leds']):
+        self.writeLed({'r': 0, 'g': 200, 'b': 0})
+        time.sleep(1)
+
+    # Wait 5 seconds and restore.
+    time.sleep(5)
+    self.value = tmp
+    self.set()
+
 def push(response):
   branch = response['ref']
   if branch.startswith('refs/heads/'):
@@ -226,25 +250,21 @@ def play():
     GITree.on(json)
   elif json['type'] == "off":
     GITree.off(json)
+  elif json['type'] == "restore":
+    GITree.set()
+  elif json['type'] == "sequence":
+    GITree.sequence(json)
   else:
     error = 'This event is not supported yet'
+    print(response)
+    return jsonify(**response), 200
 
   # This should restore it to it's old form.
-  try:
-    if json['restore'] == True:
-      GITree.set()
-  except:
-    GITree.set()
 
-  try:
-    response = {
-      'status': 'error',
-      'message': error
-    }
-  except:
-    response = {
-      'status': 'ok',
-    }
+
+  response = {
+    'status': 'ok',
+  }
   print(response)
   return jsonify(**response), 200
 
