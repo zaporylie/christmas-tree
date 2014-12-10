@@ -174,20 +174,17 @@ class ChristmasTree:
     self.value = tmp
     self.set()
 
-  def morsecode(self, json):
-    stream = open("morse.json", 'r')
-    data = json.load(stream)
-    stringList = list(json['string'])
-    # convert string to morse code. then loop through it.
-    for char in stringList:
-      code = list(data[char])
-      for sign in code:
-        if sign == "-":
-          #do sometgin
-        elif sign == ".":
-          # something else
-      
+  def disco(self, json):
+    colors = json['colors']
+    for i in range(0, json['loops']):
+      for i in range(0, self.settings['num_leds']):
+        color = json['colors'][random.randint(0, json['colors'])]
+        self.writeLed(color)
   
+      spi.flush()
+      time.sleep(1)
+
+    self.set()
 
 def push(response):
   branch = response['ref']
@@ -269,6 +266,8 @@ def play():
     GITree.set()
   elif json['type'] == "sequence":
     GITree.sequence(json)
+  elif json['type'] == 'disco':
+    GITree.disco(json)
   else:
     error = 'This event is not supported yet'
     print(response)
