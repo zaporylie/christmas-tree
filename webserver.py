@@ -184,8 +184,6 @@ class ChristmasTree:
       spi.flush()
       time.sleep(1)
 
-    self.set()
-
 def push(response):
   branch = response['ref']
   if branch.startswith('refs/heads/'):
