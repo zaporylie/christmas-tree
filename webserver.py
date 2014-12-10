@@ -178,7 +178,7 @@ class ChristmasTree:
     colors = json['colors']
     for i in range(0, json['loops']):
       for i in range(0, self.settings['num_leds']):
-        color = json['colors'][random.randint(0, json['colors'])]
+        color = json['colors'][random.randint(0, len(json['colors']) - 1)]
         self.writeLed(color)
   
       spi.flush()
@@ -270,15 +270,23 @@ def play():
     GITree.disco(json)
   else:
     error = 'This event is not supported yet'
-    print(response)
-    return jsonify(**response), 200
 
   # This should restore it to it's old form.
+  try:
+    if json['restore'] == True:
+      GITree.set()
+  except:
+    GITree.set()
 
-
-  response = {
-    'status': 'ok',
-  }
+  try:
+    response = {
+      'status': 'error',
+      'message': error
+    }
+  except:
+    response = {
+      'status': 'ok',
+    }
   print(response)
   return jsonify(**response), 200
 
