@@ -174,6 +174,21 @@ class ChristmasTree:
     self.value = tmp
     self.set()
 
+  def morsecode(self, json):
+    stream = open("morse.json", 'r')
+    data = json.load(stream)
+    stringList = list(json['string'])
+    # convert string to morse code. then loop through it.
+    for char in stringList:
+      code = list(data[char])
+      for sign in code:
+        if sign == "-":
+          #do sometgin
+        elif sign == ".":
+          # something else
+      
+  
+
 def push(response):
   branch = response['ref']
   if branch.startswith('refs/heads/'):
