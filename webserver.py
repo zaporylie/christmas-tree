@@ -150,6 +150,40 @@ class ChristmasTree:
     self.set()
     self.value = tmp
 
+  def sequence(self, json):
+    # Store original value, so we can restore it when we are finished.
+    tmp = self.value
+
+    if json['sequence'] == 'oddeven':
+      odd = True
+      for i in range(0, self.settings['num_leds']):
+        if odd == True:
+          self.writeLed({'r': 0, 'g': 200, 'b': 0})
+          odd = False
+        else:
+          self.writeLed({'r': 0, 'g': 0, 'b': 0})
+          odd = True
+    
+    elif json['sequence'] == 'stepup':
+      for i in range(0, self.settings['num_leds']):
+        self.writeLed({'r': 0, 'g': 200, 'b': 0})
+        time.sleep(1)
+
+    # Wait 5 seconds and restore.
+    time.sleep(5)
+    self.value = tmp
+    self.set()
+
+  def disco(self, json):
+    colors = json['colors']
+    for i in range(0, json['loops']):
+      for i in range(0, self.settings['num_leds']):
+        color = json['colors'][random.randint(0, len(json['colors']) - 1)]
+        self.writeLed(color)
+  
+      spi.flush()
+      time.sleep(1)
+
 def push(response):
   branch = response['ref']
   if branch.startswith('refs/heads/'):
@@ -226,6 +260,12 @@ def play():
     GITree.on(json)
   elif json['type'] == "off":
     GITree.off(json)
+  elif json['type'] == "restore":
+    GITree.set()
+  elif json['type'] == "sequence":
+    GITree.sequence(json)
+  elif json['type'] == 'disco':
+    GITree.disco(json)
   else:
     error = 'This event is not supported yet'
 
