@@ -179,19 +179,29 @@ class ChristmasTree:
       k = 0
       for j in range(0, i):
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
-        k++
+        k += 1
       for j in frame:
         self.writeLed(j)
-        k++
+        k += 1
       for j in range(k, self.settings['num_leds']):
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
       spi.flush()
-      time.sleep(0.2)
+      time.sleep(0.03)
 
   def knightRider(self):
     frame = [
       {
-        'r': 50,
+        'r': 20,
+        'g': 0,
+        'b': 0,
+      },
+      {
+        'r': 60,
+        'g': 0,
+        'b': 0,
+      },
+      {
+        'r': 90,
         'g': 0,
         'b': 0,
       },
@@ -201,25 +211,25 @@ class ChristmasTree:
         'b': 0,
       },
       {
-        'r': 250,
+        'r': 90,
         'g': 0,
         'b': 0,
       },
       {
-        'r': 150,
+        'r': 60,
         'g': 0,
         'b': 0,
       },
       {
-        'r': 50,
+        'r': 20,
         'g': 0,
         'b': 0,
       },
     ]
 
     for i in range(0, 5):
-      singleLoop(0, self.settings['num_leds'] - len(frame), 1, frame)
-      singleLoop(self.settings['num_leds'] - len(frame), 0, -1, frame)
+      self.singleLoop(0, self.settings['num_leds'] - len(frame), 1, frame)
+      self.singleLoop(self.settings['num_leds'] - len(frame), 0, -1, frame)
 
 
   def disco(self, json):
