@@ -2,124 +2,48 @@
 <html>
   <head>
     <title>ChristmasGITree</title>
-    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.0/flatly/bootstrap.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.3.0/superhero/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/style.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    <script type="text/javascript">
-      $( document ).ready(function() {
-        $('button.on').click(function () {
-          data = {
-            'type': 'on',
-            'restore': false
-          }
-          callAjaxPlay(data, 'Turned on!');
-        });
-        $('button.off').click(function () {
-          data = {
-            'type': 'off',
-            'restore': false
-          }
-          callAjaxPlay(data, 'Turned off!');
-        });
-        $('button.restore').click(function () {
-          data = {
-            'type': 'restore'
-          }
-          callAjaxPlay(data, 'Restored!');
-        });
-        $('button.knightrider').click(function () {
-          data = {
-            'type': 'knightRider'
-          }
-          callAjaxPlay(data, 'Knight Rider!');
-        });
-        $('button.disco').click(function () {
-          data = {
-            'type': 'disco',
-            'restore': true,
-            'loops': Math.floor((Math.random() * 10) + 10),
-            'sleep': Math.random(),
-            'colors': randColors()
-          }
-          callAjaxPlay(data, 'Disco!');
-        });
-        function callAjaxPlay(data, message) {
-          $.ajax({
-            url: "/play",
-            method: 'POST',
-            contentType: "application/json",
-            dataType: 'json',
-            headers: {
-              'Awesome-Security': 'Value'
-            },
-            data: JSON.stringify(data)
-          }).done(function(data) {
-            $("#console").prepend("<div>" + message + "</div>");
-          });
-        }
-        function randColors() {
-          data = [];
-          for (i = 0; i < Math.floor((Math.random() * 10) + 1); i++) {
-            data.push(randColor());
-          }
-          return data;
-        }
-        function randColor() {
-          color = {};
-          if (Math.round(Math.random())) {
-            color['r'] = 255;
-          }
-          else {
-            color['r'] = 0;
-          }
-          if (Math.round(Math.random())) {
-            color['g'] = 255;
-          }
-          else {
-            color['g'] = 0;
-          }
-          if (Math.round(Math.random())) {
-            color['b'] = 255;
-          }
-          else {
-            color['b'] = 0;
-          }
-          return color;
-        }
-      });
-    </script>
-    <style>
-      #console {
-        max-height: 100px;
-        overflow: auto;
-      }
-    </style>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="../static/interface.js"></script>
   </head>
 
   <body>
+    <div class="navbar navbar-inverse">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-inverse-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><img src="../static/ChristmasGITree.png" id="logo"></a>
+      </div>
+      <div class="navbar-collapse collapse navbar-inverse-collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="#" class="call on">On</a></li>
+          <li><a href="#" class="call off">Off</a></li>
+          <li><a href="#" class="call restore">Restore</a></li>
+          <li><a href="#" class="call disco">DiScO</a></li>
+          <li><a href="#" class="call knightrider">Knight Rider</a></li>
+        </ul>
+      </div>
+    </div>
     <div class="container-fluid">
-      <h1>Manage ChristmasGITree</h1>
-      <p>Let us light up christmas tree together.</p>
-      <p><button type="button" class="btn btn-success on">Turn lights on!</button></p>
-      <p><button type="button" class="btn btn-warning off">Turn lights off!</button></p>
-      <p><button type="button" class="btn btn-default restore">Restore!</button></p>
-      <p><button type="button" class="btn btn-warning disco">DiScO!</button></p>
-      <p><button type="button" class="btn btn-warning knightrider">Knight Rider!</button></p>
       <p>
+        <h2>Current progress:</h2>
         <div class="progress progress-striped active">
           <div class="progress-bar" style="width: {{ percentage }}%">{{ value }}</div>
         </div>
       </p>
-      <p>
-        <div class="panel panel-info">
-          <div class="panel-heading">
-            <h3 class="panel-title">Panel info</h3>
-          </div>
-          <div class="panel-body" id="console">
-            <div>Results:</div>
-          </div>
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h3 class="panel-title">Console</h3>
         </div>
-      </p>
+        <div class="panel-body" id="console">
+        </div>
+      </div>
     </div>
   </body>
 </html>

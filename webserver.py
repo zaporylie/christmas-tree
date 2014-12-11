@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import datetime, json, time, requests, yaml
 import array, fcntl, time, signal, sys, random, re
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 spi = file("/dev/spidev0.0", "wb")
 fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
@@ -354,9 +354,9 @@ def play():
 @app.route("/interface", methods=['GET'])
 def interface():
   templateData = {
-    'value': GITree.getValue(),
+    'value': GITree.getValue() + 1,
     'max': GITree.settings['num_leds'],
-    'percentage': (float(GITree.getValue()) / float(GITree.settings['num_leds'])) * 100
+    'percentage': (float(GITree.getValue() + 1) / float(GITree.settings['num_leds'] )) * 100
   }
   return render_template('interface.html', **templateData)
 
