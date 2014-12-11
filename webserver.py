@@ -174,6 +174,54 @@ class ChristmasTree:
     self.value = tmp
     self.set()
 
+  def singleLoop(self, start, end, t, frame):
+    for i in range(start, end, t):
+      k = 0
+      for j in range(0, i):
+        self.writeLed({'r': 0, 'g': 0, 'b': 0})
+        k++
+      for j in frame:
+        self.writeLed(j)
+        k++
+      for j in range(k, self.settings['num_leds']):
+        self.writeLed({'r': 0, 'g': 0, 'b': 0})
+      spi.flush()
+      time.sleep(0.2)
+
+  def knightRider(self):
+    frame = [
+      {
+        'r': 50,
+        'g': 0,
+        'b': 0,
+      },
+      {
+        'r': 150,
+        'g': 0,
+        'b': 0,
+      },
+      {
+        'r': 250,
+        'g': 0,
+        'b': 0,
+      },
+      {
+        'r': 150,
+        'g': 0,
+        'b': 0,
+      },
+      {
+        'r': 50,
+        'g': 0,
+        'b': 0,
+      },
+    ]
+
+    for i in range(0, 5):
+      singleLoop(0, self.settings['num_leds'] - len(frame), 1, frame)
+      singleLoop(self.settings['num_leds'] - len(frame), 0, -1, frame)
+
+
   def disco(self, json):
     colors = json['colors']
     for i in range(0, json['loops']):
@@ -267,6 +315,8 @@ def play():
     GITree.set()
   elif json['type'] == "sequence":
     GITree.sequence(json)
+  elif json['type'] == "knightRider":
+    GITree.knightRider()
   elif json['type'] == 'disco':
     GITree.disco(json)
   else:

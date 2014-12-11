@@ -27,6 +27,12 @@
           }
           callAjaxPlay(data, 'Restored!');
         });
+        $('button.knightrider').click(function () {
+          data = {
+            'type': 'knightRider'
+          }
+          callAjaxPlay(data, 'Knight Rider!');
+        });
         $('button.disco').click(function () {
           data = {
             'type': 'disco',
@@ -35,7 +41,7 @@
             'sleep': Math.random(),
             'colors': randColors()
           }
-          callAjaxPlay(data, 'Restored!');
+          callAjaxPlay(data, 'Disco!');
         });
         function callAjaxPlay(data, message) {
           $.ajax({
@@ -98,6 +104,7 @@
       <p><button type="button" class="btn btn-warning off">Turn lights off!</button></p>
       <p><button type="button" class="btn btn-default restore">Restore!</button></p>
       <p><button type="button" class="btn btn-warning disco">DiScO!</button></p>
+      <p><button type="button" class="btn btn-warning knightrider">Knight Rider!</button></p>
       <p>
         <div class="progress progress-striped active">
           <div class="progress-bar" style="width: {{ percentage }}%">{{ value }}</div>
