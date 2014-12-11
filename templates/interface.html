@@ -21,7 +21,7 @@
               'restore': false
             })
           }).done(function(data) {
-            $("#console").prepend("<div>Done!</div>");
+            $("#console").prepend("<div>Turned on!</div>");
           });
         });
         $('button.off').click(function () {
@@ -38,7 +38,23 @@
               'restore': false
             })
           }).done(function(data) {
-            $("#console").prepend("<div>Done!</div>");
+            $("#console").prepend("<div>Turned off!</div>");
+          });
+        });
+        $('button.restore').click(function () {
+          $.ajax({
+            url: "/play",
+            method: 'POST',
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+              'Awesome-Security': 'Value'
+            },
+            data: JSON.stringify({
+              'type': 'restore',
+            })
+          }).done(function(data) {
+            $("#console").prepend("<div>Restored!</div>");
           });
         });
       });
@@ -52,23 +68,24 @@
   </head>
 
   <body>
-    <h1>Manage ChristmasGITree</h1>
-    <p>Let us light up christmas tree together.</p>
-    <button type="button" class="btn btn-default on">Turn lights on!</button>
-    <button type="button" class="btn btn-default off">Turn lights off!</button>
-    <br />
-    {{ value }} <br />
-    {{ max }} <br />
-    <div class="progress progress-striped active">
-      <div class="progress-bar" style="width: {{ percentage }}%"></div>
-    </div>
-    <br />
-    <div class="panel panel-info">
-      <div class="panel-heading">
-        <h3 class="panel-title">Panel info</h3>
+    <div class="container-fluid">
+      <h1>Manage ChristmasGITree</h1>
+      <p>Let us light up christmas tree together.</p>
+      <button type="button" class="btn btn-success on">Turn lights on!</button>
+      <button type="button" class="btn btn-warning off">Turn lights off!</button>
+      <button type="button" class="btn btn-default restore">Restore!</button>
+      <br />
+      <div class="progress progress-striped active">
+        <div class="progress-bar" style="width: {{ percentage }}%">{{ value }}</div>
       </div>
-      <div class="panel-body" id="console">
-        <div>Results:</div>
+      <br />
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h3 class="panel-title">Panel info</h3>
+        </div>
+        <div class="panel-body" id="console">
+          <div>Results:</div>
+        </div>
       </div>
     </div>
   </body>
