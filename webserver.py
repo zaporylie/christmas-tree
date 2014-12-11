@@ -182,7 +182,10 @@ class ChristmasTree:
         self.writeLed(color)
   
       spi.flush()
-      time.sleep(1)
+      try:
+        time.sleep(json['sleep'])
+      except:
+        time.sleep(0.5)
 
 def push(response):
   branch = response['ref']

@@ -32,6 +32,7 @@
             'type': 'disco',
             'restore': true,
             'loops': Math.floor((Math.random() * 10) + 10),
+            'sleep': Math.random(),
             'colors': randColors()
           }
           callAjaxPlay(data, 'Restored!');
