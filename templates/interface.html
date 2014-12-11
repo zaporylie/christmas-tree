@@ -8,40 +8,35 @@
     <script type="text/javascript">
       $( document ).ready(function() {
         $('button.on').click(function () {
-          $.ajax({
-            url: "/play",
-            method: 'POST',
-            contentType: "application/json",
-            dataType: 'json',
-            headers: {
-              'Awesome-Security': 'Value'
-            },
-            data: JSON.stringify({
-              'type': 'on',
-              'restore': false
-            })
-          }).done(function(data) {
-            $("#console").prepend("<div>Turned on!</div>");
-          });
+          data = {
+            'type': 'on',
+            'restore': false
+          }
+          callAjaxPlay(data, 'Turned on!');
         });
         $('button.off').click(function () {
-          $.ajax({
-            url: "/play",
-            method: 'POST',
-            contentType: "application/json",
-            dataType: 'json',
-            headers: {
-              'Awesome-Security': 'Value'
-            },
-            data: JSON.stringify({
-              'type': 'off',
-              'restore': false
-            })
-          }).done(function(data) {
-            $("#console").prepend("<div>Turned off!</div>");
-          });
+          data = {
+            'type': 'off',
+            'restore': false
+          }
+          callAjaxPlay(data, 'Turned off!');
         });
         $('button.restore').click(function () {
+          data = {
+            'type': 'restore'
+          }
+          callAjaxPlay(data, 'Restored!');
+        });
+        $('button.disco').click(function () {
+          data = {
+            'type': 'disco',
+            'restore': true,
+            'loops': Math.floor((Math.random() * 100) + 10),
+            'colors': randColors()
+          }
+          callAjaxPlay(data, 'Restored!');
+        });
+        function callAjaxPlay(data, message) {
           $.ajax({
             url: "/play",
             method: 'POST',
@@ -50,13 +45,25 @@
             headers: {
               'Awesome-Security': 'Value'
             },
-            data: JSON.stringify({
-              'type': 'restore',
-            })
+            data: JSON.stringify(data)
           }).done(function(data) {
-            $("#console").prepend("<div>Restored!</div>");
+            $("#console").prepend("<div>" + message + "</div>");
           });
-        });
+        }
+        function randColors() {
+          data = [];
+          for (i = 0; i < Math.floor((Math.random() * 10) + 1); i++) {
+            data.push(randColor());
+          }
+          return data;
+        }
+        function randColor() {
+          return {
+            'r': Math.floor((Math.random() * 200)),
+            'g': Math.floor((Math.random() * 200)),
+            'b': Math.floor((Math.random() * 200))
+          }
+        }
       });
     </script>
     <style>
@@ -71,9 +78,10 @@
     <div class="container-fluid">
       <h1>Manage ChristmasGITree</h1>
       <p>Let us light up christmas tree together.</p>
-      <button type="button" class="btn btn-success on">Turn lights on!</button>
-      <button type="button" class="btn btn-warning off">Turn lights off!</button>
-      <button type="button" class="btn btn-default restore">Restore!</button>
+      <button type="button" class="btn btn-success on">Turn lights on!</button><br />
+      <button type="button" class="btn btn-warning off">Turn lights off!</button><br />
+      <button type="button" class="btn btn-default restore">Restore!</button><br />
+      <button type="button" class="btn btn-default disco">DiScO!</button><br />
       <br />
       <div class="progress progress-striped active">
         <div class="progress-bar" style="width: {{ percentage }}%">{{ value }}</div>
