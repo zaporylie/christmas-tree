@@ -61,8 +61,8 @@ class ChristmasTree(threading.Thread):
       print(order)
       self.queue.task_done()
       try:
-        func = order[0]
-        args = order[1:]
+        func = order['command']
+        args = order['parameters']
         locals()[func](*args)
 
       except Exception, e:#little bit ugly
@@ -309,22 +309,22 @@ def play():
 
   if json['type'] == "blink":
     # GITree.blinkMode(json)
-    q.put('blinkMode', json)
+    q.put({'command': 'blinkMode', 'parameters': json})
   elif json['type'] == "on":
     # GITree.on(json)
-    q.put('on', json)
+    q.put({'command': 'on', 'parameters': json})
   elif json['type'] == "off":
     # GITree.off(json)
-    q.put('off', json)
+    q.put({'command': 'off', 'parameters': json})
   elif json['type'] == "restore":
     # GITree.set()
-    q.put('restore', json)
+    q.put({'command': 'restore', 'parameters': json})
   elif json['type'] == "knightRider":
     # GITree.knightRider(json)
-    q.put('knightRider', json)
+    q.put({'command': 'knightRider', 'parameters': json})
   elif json['type'] == 'disco':
     # GITree.disco(json)
-    q.put('disco', json)
+    q.put({'command': 'disco', 'parameters': json})
   else:
     error = 'This event is not supported yet'
 
