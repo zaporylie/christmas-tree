@@ -52,6 +52,7 @@ class ChristmasTree(threading.Thread):
   def __init__(self, queue):
     self.getSettings()
     self.value = self.settings['initial_value']
+    self.queue = queue
     threading.Thread.__init__(self)
 
   def run(self):
