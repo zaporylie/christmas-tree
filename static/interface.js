@@ -5,7 +5,7 @@ $( document ).ready(function() {
       'type': 'on',
       'restore': false
     }
-    callAjaxPlay(data, 'Turned on!');
+    callAjaxPlay(data, 'Turned on mode');
   });
 
   $('.call.off').click(function () {
@@ -13,21 +13,35 @@ $( document ).ready(function() {
       'type': 'off',
       'restore': false
     }
-    callAjaxPlay(data, 'Turned off!');
+    callAjaxPlay(data, 'Turned off mode');
   });
 
   $('.call.restore').click(function () {
     data = {
       'type': 'restore'
     }
-    callAjaxPlay(data, 'Restored!');
+    callAjaxPlay(data, 'Restore mode');
+  });
+
+  $('.call.cleanup').click(function () {
+    data = {
+      'type': 'cleanup'
+    }
+    callAjaxPlay(data, 'Cleaned up');
+  });
+
+  $('.call.interrupt').click(function () {
+    data = {
+      'type': 'interrupt'
+    }
+    callAjaxPlay(data, 'Interrupted');
   });
 
   $('.call.knightrider').click(function () {
     data = {
       'type': 'knightRider'
     }
-    callAjaxPlay(data, 'Knight Rider!');
+    callAjaxPlay(data, 'Knight Rider mode');
   });
 
   $('.call.disco').click(function () {
@@ -38,7 +52,7 @@ $( document ).ready(function() {
       'sleep': Math.random(),
       'colors': randColors()
     }
-    callAjaxPlay(data, 'Disco!');
+    callAjaxPlay(data, 'Disco mode');
   });
 
 
@@ -53,9 +67,11 @@ $( document ).ready(function() {
       },
       data: JSON.stringify(data)
     }).done(function(data) {
-      $("#console").prepend("<div class='bs-callout bs-callout-success'>" + message + "</div>");
+      $("#console").append("<div class='c-message c-message-success'>" + data.message + "</div>");
+      $("#console").scrollTop($("#console")[0].scrollHeight);
     }).fail(function(data) {
-      $("#console").prepend("<div class='bs-callout bs-callout-danger'>Failed: " + message + "</div>");
+      $("#console").append("<div class='c-message c-message-danger'>" + message + " failed!</div>");
+      $("#console").scrollTop($("#console")[0].scrollHeight);
     });
   }
 

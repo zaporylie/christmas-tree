@@ -6,6 +6,7 @@ app = Flask(__name__, static_url_path='/static')
 
 spi = file("/dev/spidev0.0", "wb")
 fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
+interrupt = False
 
 # Message Class
 class Message:
@@ -64,6 +65,7 @@ class ChristmasTree(threading.Thread):
         func = order['command']
         args = order['parameters']
         self.__getattribute__(func)(args)
+        # socket here?
 
       except Exception, e:#little bit ugly
         print e
@@ -89,6 +91,7 @@ class ChristmasTree(threading.Thread):
     self.set()
 
   def set(self):
+    # Rebuild settings
     self.getSettings()
     # Get random colored lights
     rand = []
@@ -104,11 +107,11 @@ class ChristmasTree(threading.Thread):
         self.writeLed(
           {
             'r': random.randint(0,255),
-            'g': random.randint(0,10),
-            'b': random.randint(0,10)
+            'g': 0,
+            'b': 0
           }
         )
-      elif i == 49 and self.value == 49:
+      elif i == (self.settings['num_leds'] - 1) and self.value == (self.settings['num_leds'] - 1):
         self.writeLed({'r': 255, 'g': 150, 'b': 0})
       elif i < self.value:
         self.writeLed({'r': 0, 'g': 200, 'b': 0})
@@ -116,6 +119,7 @@ class ChristmasTree(threading.Thread):
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
     spi.flush()
+    return True
 
   def writeLed(self, color):
     rgb = bytearray(3)
@@ -123,52 +127,82 @@ class ChristmasTree(threading.Thread):
     rgb[1] = color['g']
     rgb[2] = color['b']
     spi.write(rgb)
+    return True
 
   def blinkMode(self, json):
+    # Rebuild settings
     self.getSettings()
+
     try:
       json['loops']
     except:
       print('No loops in your request')
-      return false
+      return False
     
     for i in range(0, json['loops']):
       for j in range(0, self.settings['num_leds']):
+
+        # kill process on interrupt
+        if interrupt == True:
+          interrupt = False
+          return False
+
         try:
-          # test
+          # test if value exist
           self.writeLed(json['values'][j])
         except:
           self.writeLed({'r': 0, 'g': 0, 'b': 0})
 
       spi.flush()
+
       try:
         time.sleep(json['sleep'])
       except:
-        print('No sleep value')
+        print('No sleep value, default - 0.2')
+        time.sleep(0.2)
+
       
       # Zero out the leds.
       for i in range(0, self.settings['num_leds']):
+
+        # kill process on interrupt
+        if interrupt == True:
+          interrupt = False
+          return False
+
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
+
       spi.flush()
+
       try:
         time.sleep(json['sleep'])
       except:
-        print('No sleep value')
-        
+        time.sleep(0.2)
+
+    return True
+
   def on(self, json):
     tmp = self.value
     self.value = 49
     self.set()
     self.value = tmp
+    return True
     
   def off(self, json):
     tmp = self.value
     self.value = 0
     self.set()
     self.value = tmp
+    return True
 
   def singleLoop(self, start, end, t, frame):
     for i in range(start, end, t):
+
+      # kill process on interrupt
+      if interrupt == True:
+        interrupt = False
+        return False
+
       k = 0
       for j in range(0, i):
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
@@ -178,47 +212,52 @@ class ChristmasTree(threading.Thread):
         k += 1
       for j in range(k, self.settings['num_leds']):
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
+
       spi.flush()
+
       time.sleep(0.03)
 
   def knightRider(self, json):
-    frame = [
-      {
-        'r': 20,
-        'g': 0,
-        'b': 0,
-      },
-      {
-        'r': 60,
-        'g': 0,
-        'b': 0,
-      },
-      {
-        'r': 90,
-        'g': 0,
-        'b': 0,
-      },
-      {
-        'r': 150,
-        'g': 0,
-        'b': 0,
-      },
-      {
-        'r': 90,
-        'g': 0,
-        'b': 0,
-      },
-      {
-        'r': 60,
-        'g': 0,
-        'b': 0,
-      },
-      {
-        'r': 20,
-        'g': 0,
-        'b': 0,
-      },
-    ]
+    try:
+      frame = json['frame']
+    except:
+      frame = [
+        {
+          'r': 20,
+          'g': 0,
+          'b': 0,
+        },
+        {
+          'r': 60,
+          'g': 0,
+          'b': 0,
+        },
+        {
+          'r': 90,
+          'g': 0,
+          'b': 0,
+        },
+        {
+          'r': 150,
+          'g': 0,
+          'b': 0,
+        },
+        {
+          'r': 90,
+          'g': 0,
+          'b': 0,
+        },
+        {
+          'r': 60,
+          'g': 0,
+          'b': 0,
+        },
+        {
+          'r': 20,
+          'g': 0,
+          'b': 0,
+        },
+      ]
 
     for i in range(0, 5):
       self.singleLoop(0, self.settings['num_leds'] - len(frame), 1, frame)
@@ -226,17 +265,31 @@ class ChristmasTree(threading.Thread):
 
 
   def disco(self, json):
-    colors = json['colors']
+    try:
+      colors = json['colors']
+    except:
+      print('Missing colors element')
+      return False
+
     for i in range(0, json['loops']):
       for i in range(0, self.settings['num_leds']):
-        color = json['colors'][random.randint(0, len(json['colors']) - 1)]
+
+        # kill process on interrupt
+        if interrupt == True:
+          interrupt = False
+          return False
+
+        color = json['colors'][random.randint(0, len(colors) - 1)]
         self.writeLed(color)
   
       spi.flush()
+
       try:
         time.sleep(json['sleep'])
       except:
         time.sleep(0.5)
+
+    return True
 
 
 # define queue
@@ -301,7 +354,7 @@ def endpoint():
 
   return 'ok', 200
 
-@app.route("/play", methods=['GET', 'POST'])
+@app.route("/play", methods=['POST'])
 def play():
   if request.headers.get('Awesome-Security') is None:
     return "Awesome-Security is enabled", 400;
@@ -309,18 +362,24 @@ def play():
   # Get JSON from input.
   json = request.get_json()
 
-  if json['type'] == "blink":
-    q.put({'command': 'blinkMode', 'parameters': json})
-  elif json['type'] == "on":
-    q.put({'command': 'on', 'parameters': json})
-  elif json['type'] == "off":
-    q.put({'command': 'off', 'parameters': json})
-  elif json['type'] == "restore":
-    q.put({'command': 'restore', 'parameters': json})
-  elif json['type'] == "knightRider":
-    q.put({'command': 'knightRider', 'parameters': json})
-  elif json['type'] == 'disco':
-    q.put({'command': 'disco', 'parameters': json})
+  availableTypes = [
+    'blink',
+    'on',
+    'off',
+    'restore',
+    'knightRider',
+    'disco'
+  ]
+
+  if json['type'] == 'interrupt':
+    interrupt = True
+    message = 'Current order has been interrupted'
+  elif json['type'] == 'cleanup':
+    q.queue.clear()
+    message = 'Orders queue has been cleaned'
+  elif json['type'] in availableTypes:
+    q.put({'command': json['type'], 'parameters': json})
+    message = json['type'] + ' has been queued'
   else:
     error = 'This event is not supported yet'
 
@@ -332,6 +391,7 @@ def play():
   except:
     response = {
       'status': 'ok',
+      'message': message
     }
 
   return jsonify(**response), 200
@@ -346,8 +406,11 @@ def interface():
   return render_template('interface.html', **templateData)
 
 if __name__ == "__main__":
+
   # define new Christmas tree object
   GITree = ChristmasTree(q)
+
   # start a thread
   GITree.start()
+
   app.run(host='0.0.0.0', port=80, debug=True)
