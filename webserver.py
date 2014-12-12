@@ -63,9 +63,7 @@ class ChristmasTree(threading.Thread):
       try:
         func = order['command']
         args = order['parameters']
-        print(locals())
-        print(globals())
-        self.locals()[func](*args)
+        self.__getattribute__(func)(args)
 
       except Exception, e:#little bit ugly
         print e
@@ -184,8 +182,6 @@ class ChristmasTree(threading.Thread):
       time.sleep(0.03)
 
   def knightRider(self, json):
-    print('working:')
-    print(json)
     frame = [
       {
         'r': 20,
@@ -242,6 +238,11 @@ class ChristmasTree(threading.Thread):
       except:
         time.sleep(0.5)
 
+
+# define queue
+q = Queue()
+
+
 def push(response):
   branch = response['ref']
   if branch.startswith('refs/heads/'):
@@ -253,29 +254,26 @@ def push(response):
 
   # do something
   if branch == master_branch and not is_merged:
-    # GITree.minus(points)
+    q.put({'command': 'minus', 'parameters': points})
     Message('minus', sender, points)
   elif branch == master_branch and is_merged:
-    # GITree.plus(3)
+    q.put({'command': 'plus', 'parameters': 3})
     Message('plus', sender, 3)
   else:
-    # GITree.plus(points)
+    q.put({'command': 'plus', 'parameters': points})
     Message('plus', sender, points)
 
 def create(sender):
-  # GITree.plus(2)
+  q.put({'command': 'plus', 'parameters': 2})
   Message('plus', sender, 2)
 
 def pull_request(sender):
-  # GITree.plus(2)
+  q.put({'command': 'plus', 'parameters': 2})
   Message('plus', sender, 2)
 
 def issue_comment(sender):
-  # GITree.plus(1)
+  q.put({'command': 'plus', 'parameters': 1})
   Message('plus', sender, 1)
-
-# define queue
-q = Queue()
 
 @app.route("/", methods=['GET'])
 def index():
@@ -312,22 +310,16 @@ def play():
   json = request.get_json()
 
   if json['type'] == "blink":
-    # GITree.blinkMode(json)
     q.put({'command': 'blinkMode', 'parameters': json})
   elif json['type'] == "on":
-    # GITree.on(json)
     q.put({'command': 'on', 'parameters': json})
   elif json['type'] == "off":
-    # GITree.off(json)
     q.put({'command': 'off', 'parameters': json})
   elif json['type'] == "restore":
-    # GITree.set()
     q.put({'command': 'restore', 'parameters': json})
   elif json['type'] == "knightRider":
-    # GITree.knightRider(json)
     q.put({'command': 'knightRider', 'parameters': json})
   elif json['type'] == 'disco':
-    # GITree.disco(json)
     q.put({'command': 'disco', 'parameters': json})
   else:
     error = 'This event is not supported yet'
