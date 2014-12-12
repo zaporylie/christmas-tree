@@ -308,22 +308,22 @@ def play():
 
   if json['type'] == "blink":
     # GITree.blinkMode(json)
-    q.put(blinkMode, json)
+    q.put('blinkMode', json)
   elif json['type'] == "on":
     # GITree.on(json)
-    q.put(on, json)
+    q.put('on', json)
   elif json['type'] == "off":
     # GITree.off(json)
-    q.put(off, json)
+    q.put('off', json)
   elif json['type'] == "restore":
     # GITree.set()
-    q.put(restore, json)
+    q.put('restore', json)
   elif json['type'] == "knightRider":
     # GITree.knightRider(json)
-    q.put(knightRider, json)
+    q.put('knightRider', json)
   elif json['type'] == 'disco':
     # GITree.disco(json)
-    q.put(disco, json)
+    q.put('disco', json)
   else:
     error = 'This event is not supported yet'
 
