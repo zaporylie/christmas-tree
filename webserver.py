@@ -269,6 +269,8 @@ def issue_comment(sender):
   # GITree.plus(1)
   Message('plus', sender, 1)
 
+# define queue
+q = Queue()
 
 @app.route("/", methods=['GET'])
 def index():
@@ -306,22 +308,22 @@ def play():
 
   if json['type'] == "blink":
     # GITree.blinkMode(json)
-    self.queue.put(blinkMode, json)
+    q.put(blinkMode, json)
   elif json['type'] == "on":
     # GITree.on(json)
-    self.queue.put(on, json)
+    q.put(on, json)
   elif json['type'] == "off":
     # GITree.off(json)
-    self.queue.put(off, json)
+    q.put(off, json)
   elif json['type'] == "restore":
     # GITree.set()
-    self.queue.put(restore, json)
+    q.put(restore, json)
   elif json['type'] == "knightRider":
     # GITree.knightRider(json)
-    self.queue.put(knightRider, json)
+    q.put(knightRider, json)
   elif json['type'] == 'disco':
     # GITree.disco(json)
-    self.queue.put(disco, json)
+    q.put(disco, json)
   else:
     error = 'This event is not supported yet'
 
@@ -347,8 +349,6 @@ def interface():
   return render_template('interface.html', **templateData)
 
 if __name__ == "__main__":
-  # define queue
-  q = Queue()
   # define new Christmas tree object
   GITree = ChristmasTree(q)
   # start a thread
