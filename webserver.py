@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import datetime, json, time, requests, yaml
-import array, fcntl, time, signal, sys, random, re, threading
+import array, fcntl, time, signal, sys, random, re, threading, foo
 from Queue import Queue
 app = Flask(__name__, static_url_path='/static')
 
@@ -62,7 +62,8 @@ class ChristmasTree(threading.Thread):
       try:
         func = order[0]
         args = order[1:]
-        self.func(*args)
+        methodToCall(foo, func)
+        self.methodToCall(*args)
 
       except Exception, e:#little bit ugly
         print e
