@@ -182,6 +182,8 @@ class ChristmasTree(threading.Thread):
       time.sleep(0.03)
 
   def knightRider(self, json):
+    print('working:')
+    print(json)
     frame = [
       {
         'r': 20,
