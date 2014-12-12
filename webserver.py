@@ -55,7 +55,7 @@ class ChristmasTree(threading.Thread):
     threading.Thread.__init__(self)
 
   def run(self):
-    while TRUE:
+    while True:
       order = self.queue.get()
       self.queue.task_done()
       try:
