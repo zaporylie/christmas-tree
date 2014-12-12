@@ -268,13 +268,6 @@ def issue_comment(sender):
   Message('plus', sender, 1)
 
 
-# define queue
-q = Queue()
-# define new Christmas tree object
-GITree = ChristmasTree(q)
-# start a thread
-GITree.start()
-
 @app.route("/", methods=['GET'])
 def index():
   return render_template('index.html')
@@ -352,4 +345,10 @@ def interface():
   return render_template('interface.html', **templateData)
 
 if __name__ == "__main__":
+  # define queue
+  q = Queue()
+  # define new Christmas tree object
+  GITree = ChristmasTree(q)
+  # start a thread
+  GITree.start()
   app.run(host='0.0.0.0', port=80, debug=True)
