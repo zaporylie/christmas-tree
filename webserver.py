@@ -49,9 +49,22 @@ class ChristmasTree(threading.Thread):
   value = 0;
   settings = [];
 
-  def __init__(self):
+  def __init__(self, queue):
     self.getSettings()
     self.value = self.settings['initial_value']
+
+  def run(self):
+    while TRUE:
+      order = self.queue.get()
+      self.queue.task_done()
+      try:
+        func = order[0]
+        args = order[1:]
+        self.func(*args)
+
+      except Exception, e:#little bit ugly
+        print e
+
 
   def getSettings(self):
     stream = open(".settings", 'r')
@@ -151,30 +164,6 @@ class ChristmasTree(threading.Thread):
     self.set()
     self.value = tmp
 
-  def sequence(self, json):
-    # Store original value, so we can restore it when we are finished.
-    tmp = self.value
-
-    if json['sequence'] == 'oddeven':
-      odd = True
-      for i in range(0, self.settings['num_leds']):
-        if odd == True:
-          self.writeLed({'r': 0, 'g': 200, 'b': 0})
-          odd = False
-        else:
-          self.writeLed({'r': 0, 'g': 0, 'b': 0})
-          odd = True
-    
-    elif json['sequence'] == 'stepup':
-      for i in range(0, self.settings['num_leds']):
-        self.writeLed({'r': 0, 'g': 200, 'b': 0})
-        time.sleep(1)
-
-    # Wait 5 seconds and restore.
-    time.sleep(5)
-    self.value = tmp
-    self.set()
-
   def singleLoop(self, start, end, t, frame):
     for i in range(start, end, t):
       k = 0
@@ -189,7 +178,7 @@ class ChristmasTree(threading.Thread):
       spi.flush()
       time.sleep(0.03)
 
-  def knightRider(self):
+  def knightRider(self, json):
     frame = [
       {
         'r': 20,
@@ -257,30 +246,34 @@ def push(response):
 
   # do something
   if branch == master_branch and not is_merged:
-    GITree.minus(points)
+    # GITree.minus(points)
     Message('minus', sender, points)
   elif branch == master_branch and is_merged:
-    GITree.plus(3)
+    # GITree.plus(3)
     Message('plus', sender, 3)
   else:
-    GITree.plus(points)
+    # GITree.plus(points)
     Message('plus', sender, points)
 
 def create(sender):
-  GITree.plus(2)
+  # GITree.plus(2)
   Message('plus', sender, 2)
 
 def pull_request(sender):
-  GITree.plus(2)
+  # GITree.plus(2)
   Message('plus', sender, 2)
 
 def issue_comment(sender):
-  GITree.plus(1)
+  # GITree.plus(1)
   Message('plus', sender, 1)
 
 
+# define queue
+q = Queue()
 # define new Christmas tree object
-GITree = ChristmasTree()
+GITree = ChristmasTree(q)
+# start a thread
+GITree.start()
 
 @app.route("/", methods=['GET'])
 def index():
@@ -317,28 +310,25 @@ def play():
   json = request.get_json()
 
   if json['type'] == "blink":
-    GITree.blinkMode(json)
+    # GITree.blinkMode(json)
+    self.queue.put(blinkMode, json)
   elif json['type'] == "on":
-    GITree.on(json)
+    # GITree.on(json)
+    self.queue.put(on, json)
   elif json['type'] == "off":
-    GITree.off(json)
+    # GITree.off(json)
+    self.queue.put(off, json)
   elif json['type'] == "restore":
-    GITree.set()
-  elif json['type'] == "sequence":
-    GITree.sequence(json)
+    # GITree.set()
+    self.queue.put(restore, json)
   elif json['type'] == "knightRider":
-    GITree.knightRider()
+    # GITree.knightRider(json)
+    self.queue.put(knightRider, json)
   elif json['type'] == 'disco':
-    GITree.disco(json)
+    # GITree.disco(json)
+    self.queue.put(disco, json)
   else:
     error = 'This event is not supported yet'
-
-  # This should restore it to it's old form.
-  try:
-    if json['restore'] == True:
-      GITree.set()
-  except:
-    GITree.set()
 
   try:
     response = {
@@ -349,7 +339,7 @@ def play():
     response = {
       'status': 'ok',
     }
-  print(response)
+
   return jsonify(**response), 200
 
 @app.route("/interface", methods=['GET'])
