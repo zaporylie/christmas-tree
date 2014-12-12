@@ -63,7 +63,9 @@ class ChristmasTree(threading.Thread):
       try:
         func = order['command']
         args = order['parameters']
-        locals()[func](*args)
+        print(locals())
+        print(globals())
+        self.locals()[func](*args)
 
       except Exception, e:#little bit ugly
         print e
