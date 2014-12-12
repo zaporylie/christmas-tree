@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import datetime, json, time, requests, yaml
-import array, fcntl, time, signal, sys, random, re
+import array, fcntl, time, signal, sys, random, re, threading
+from Queue import Queue
 app = Flask(__name__, static_url_path='/static')
 
 spi = file("/dev/spidev0.0", "wb")
@@ -44,7 +45,7 @@ class Message:
     r = requests.post(host + path, data=data, headers=headers)
 
 # Christmas Tree class
-class ChristmasTree:
+class ChristmasTree(threading.Thread):
   value = 0;
   settings = [];
 
