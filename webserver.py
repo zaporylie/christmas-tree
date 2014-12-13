@@ -145,6 +145,7 @@ class ChristmasTree(threading.Thread):
         # kill process on interrupt
         if interrupt == True:
           interrupt = False
+          spi.flush()
           return False
 
         try:
@@ -168,6 +169,7 @@ class ChristmasTree(threading.Thread):
         # kill process on interrupt
         if interrupt == True:
           interrupt = False
+          spi.flush()
           return False
 
         self.writeLed({'r': 0, 'g': 0, 'b': 0})
@@ -201,6 +203,7 @@ class ChristmasTree(threading.Thread):
       # kill process on interrupt
       if interrupt == True:
         interrupt = False
+        spi.flush()
         return False
 
       k = 0
@@ -277,6 +280,7 @@ class ChristmasTree(threading.Thread):
         # kill process on interrupt
         if interrupt == True:
           interrupt = False
+          spi.flush()
           return False
 
         color = json['colors'][random.randint(0, len(colors) - 1)]
