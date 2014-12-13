@@ -130,6 +130,8 @@ class ChristmasTree(threading.Thread):
     return True
 
   def blinkMode(self, json):
+    global interrupt
+
     # Rebuild settings
     self.getSettings()
 
@@ -197,7 +199,12 @@ class ChristmasTree(threading.Thread):
     self.value = tmp
     return True
 
+  def restore(self, json):
+    self.set()
+
   def singleLoop(self, start, end, t, frame):
+    global interrupt
+
     for i in range(start, end, t):
 
       # kill process on interrupt
@@ -268,6 +275,8 @@ class ChristmasTree(threading.Thread):
 
 
   def disco(self, json):
+    global interrupt
+
     try:
       colors = json['colors']
     except:
@@ -376,6 +385,7 @@ def play():
   ]
 
   if json['type'] == 'interrupt':
+    global interrupt
     interrupt = True
     message = 'Current order has been interrupted'
   elif json['type'] == 'cleanup':
