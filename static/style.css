@@ -10,6 +10,29 @@ body {
   background-color: black;
   max-height: 300px;
   overflow-y: scroll;
+  padding-bottom: 0;
+}
+#cli {
+  width: 100%;
+  padding-top: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  background-color: black;
+  color: white;
+}
+#cli * {
+  background-color: black;
+  color: white;
+  font-family: "Courier New", Courier, monospace;
+  border: 0;
+}
+#cli input {
+
+}
+#cli input:focus {
+  box-shadow: none;
+  outline: 0;
+  border-bottom: 1px solid #ffffff;
 }
 .c-message {
   padding: 0.2em 0;

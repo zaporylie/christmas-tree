@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import datetime, json, time, requests, yaml
-import array, fcntl, time, signal, sys, random, re
+import array, fcntl, time, signal, sys, random, re, hashlib
 from flask.ext.socketio import SocketIO, emit
 import gevent
 from gevent.queue import Queue
@@ -12,6 +12,7 @@ app.config['DEBUG'] = True
 socketio = SocketIO(app)
 
 q = Queue()
+session = {}
 
 spi = file("/dev/spidev0.0", "wb")
 fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
@@ -75,10 +76,6 @@ class ChristmasTree():
           'status': 'ok',
           'message': 'Starting: {}' . format(task['command']),
         }
-        try:
-          response['client'] = task['client']
-        except:
-          response['client'] = self.settings['author']
 
         # send message
         socketio.emit('message', response, namespace='/socket')
@@ -88,10 +85,6 @@ class ChristmasTree():
             'status': 'ok',
             'message': '{} completed!' . format(task['command']),
           }
-          try:
-            response['client'] = task['client']
-          except:
-            response['client'] = self.settings['author']
           # send message
           socketio.emit('message', response, namespace='/socket')
         else:
@@ -99,10 +92,6 @@ class ChristmasTree():
             'status': 'error',
             'message': '{} failed!' . format(task['command']),
           }
-          try:
-            response['client'] = task['client']
-          except:
-            response['client'] = self.settings['author']
 
           # send message
           socketio.emit('message', response, namespace='/socket')
@@ -392,6 +381,17 @@ def issue_comment(sender):
   q.put({'command': 'plus', 'parameters': 1, 'client': sender['login']})
   Message('plus', sender, 1)
 
+def getClient(id):
+  global session
+  try:
+    if session[id]['name'] is not None:
+      return session[id]['name']
+  except:
+    try:
+      if session[id] is not None:
+        return id
+    except:
+      return 'Unknown'
 
 @app.route("/", methods=['GET'])
 def index():
@@ -446,13 +446,26 @@ def interface():
 
 @socketio.on('connect', namespace='/socket')
 def connect():
-  id = random.getrandbits(128)
-  socketio.emit('session', id, namespace='/socket')
-  socketio.emit('message', {'status': 'ok', 'message': 'User {} is online' . format(id)}, namespace='/socket')
+  global session
+  id = hashlib.sha224(str(random.getrandbits(128))).hexdigest()
+  emit('session', id)
+  session[id] = {}
+  socketio.emit('message', {'status': 'ok', 'message': 'User {} is online' . format(getClient(id))}, namespace='/socket')
 
 @socketio.on('message', namespace='/socket')
 def message(message):
-  socketio.emit('message', {'status': 'default', 'message':  message['text'], 'client': message['id']}, namespace='/socket')
+  print message
+  socketio.emit('message', {'status': 'default', 'message':  message['text'], 'client': getClient(message['id'])}, namespace='/socket')
+
+@socketio.on('new_name', namespace='/socket')
+def new_name(message):
+  global session
+  try:
+    session[message['id']]['name'] = message['name']
+    socketio.emit('message', {'status': 'default', 'message':  message['id'] + ' changed his name to ' + message['name']}, namespace='/socket')
+  except:
+    socketio.emit('message', {'status': 'error', 'message':  'Unable to change user name'}, namespace='/socket')
+
 
 @socketio.on('disconnect', namespace='/socket')
 def disconnect():
@@ -511,12 +524,14 @@ def method(json):
   try:
     response = {
       'status': 'error',
-      'message': error
+      'message': error,
+      'client': getClient(json['id'])
     }
   except:
     response = {
       'status': 'ok',
-      'message': message
+      'message': message,
+      'client': getClient(json['id'])
     }
 
   # Send message to all clients
