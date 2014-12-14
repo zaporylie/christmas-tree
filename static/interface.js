@@ -1,20 +1,6 @@
-var session;
+window.session = false;
 
 function sendRequest(data, message) {
-//  $.ajax({
-//    url: "/play",
-//    method: 'POST',
-//    contentType: "application/json",
-//    dataType: 'json',
-//    headers: {
-//      'Awesome-Security': 'Value'
-//    },
-//    data: JSON.stringify(data)
-//  }).done(function(data) {
-//    setMessage(data.message, data.status, 'ChristmasGITree@pi');
-//  }).fail(function() {
-//    setMessage(message, 'error', 'ChristmasGITree@browser');
-//  });
   socket.emit('method', data);
 }
 
@@ -56,6 +42,7 @@ function randColor() {
 
 var socket = io.connect('/socket');
 socket.on('connect', function() {
+
 });
 socket.on('session', function(id) {
   window.session = id;
