@@ -447,6 +447,7 @@ def interface():
 @socketio.on('connect', namespace='/socket')
 def connect():
   id = random.getrandbits(128)
+  socketio.emit('session', id, namespace='/socket')
   socketio.emit('message', {'status': 'ok', 'message': 'User {} is online' . format(id)}, namespace='/socket')
 
 @socketio.on('message', namespace='/socket')
