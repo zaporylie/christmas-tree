@@ -1,8 +1,17 @@
 from flask import Flask, render_template, request, jsonify
 import datetime, json, time, requests, yaml
-import array, fcntl, time, signal, sys, random, re, threading
-from Queue import Queue
+import array, fcntl, time, signal, sys, random, re
+from flask.ext.socketio import SocketIO, emit
+import gevent
+from gevent.queue import Queue
+
 app = Flask(__name__, static_url_path='/static')
+app.config['SECRET_KEY'] = 'secret!'
+app.config['DEBUG'] = True
+
+socketio = SocketIO(app)
+
+q = Queue()
 
 spi = file("/dev/spidev0.0", "wb")
 fcntl.ioctl(spi, 0x40046b04, array.array('L', [400000]))
@@ -46,30 +55,60 @@ class Message:
     r = requests.post(host + path, data=data, headers=headers)
 
 # Christmas Tree class
-class ChristmasTree(threading.Thread):
+class ChristmasTree():
   value = 0;
   settings = [];
 
-  def __init__(self, queue):
+  def __init__(self):
     self.getSettings()
     self.value = self.settings['initial_value']
-    self.queue = queue
-    threading.Thread.__init__(self)
 
   def run(self):
     while True:
-      order = self.queue.get()
-      print(order)
-      self.queue.task_done()
       try:
-        func = order['command']
-        args = order['parameters']
-        self.__getattribute__(func)(args)
-        # socket here?
+        task = q.get()
+        func = task['command']
+        args = task['parameters']
+        f = getattr(self, func)
+
+        response = {
+          'status': 'ok',
+          'message': 'Starting: {}' . format(task['command']),
+        }
+        try:
+          response['client'] = task['client']
+        except:
+          response['client'] = self.settings['author']
+
+        # send message
+        socketio.emit('message', response, namespace='/socket')
+
+        if f(args) == True:
+          response = {
+            'status': 'ok',
+            'message': '{} completed!' . format(task['command']),
+          }
+          try:
+            response['client'] = task['client']
+          except:
+            response['client'] = self.settings['author']
+          # send message
+          socketio.emit('message', response, namespace='/socket')
+        else:
+          response = {
+            'status': 'error',
+            'message': '{} failed!' . format(task['command']),
+          }
+          try:
+            response['client'] = task['client']
+          except:
+            response['client'] = self.settings['author']
+
+          # send message
+          socketio.emit('message', response, namespace='/socket')
 
       except Exception, e:#little bit ugly
         print e
-
 
   def getSettings(self):
     stream = open(".settings", 'r')
@@ -83,12 +122,16 @@ class ChristmasTree(threading.Thread):
     if self.value >= 50:
       self.value = 49
     self.set()
+    socketio.emit('new_value', { 'value': self.value + 1, 'max': self.settings['num_leds'] }, namespace='/socket')
+    return True
 
   def minus(self, number):
     self.value -= number
     if self.value < 0:
       self.value = 0
     self.set()
+    socketio.emit('new_value', { 'value': self.value + 1, 'max': self.settings['num_leds'] }, namespace='/socket')
+    return True
 
   def set(self):
     # Rebuild settings
@@ -187,7 +230,7 @@ class ChristmasTree(threading.Thread):
 
   def on(self, json):
     tmp = self.value
-    self.value = 49
+    self.value = self.settings['num_leds'] - 1
     self.set()
     self.value = tmp
     return True
@@ -201,6 +244,7 @@ class ChristmasTree(threading.Thread):
 
   def restore(self, json):
     self.set()
+    return True
 
   def singleLoop(self, start, end, t, frame):
     global interrupt
@@ -226,6 +270,8 @@ class ChristmasTree(threading.Thread):
       spi.flush()
 
       time.sleep(0.03)
+
+    return True
 
   def knightRider(self, json):
     try:
@@ -270,9 +316,14 @@ class ChristmasTree(threading.Thread):
       ]
 
     for i in range(0, 5):
-      self.singleLoop(0, self.settings['num_leds'] - len(frame), 1, frame)
-      self.singleLoop(self.settings['num_leds'] - len(frame), 0, -1, frame)
+      if self.singleLoop(0, self.settings['num_leds'] - len(frame), 1, frame) == False:
+        print False
+        return False
+      if self.singleLoop(self.settings['num_leds'] - len(frame), 0, -1, frame) == False:
+        print False
+        return False
 
+    return True
 
   def disco(self, json):
     global interrupt
@@ -320,26 +371,27 @@ def push(response):
 
   # do something
   if branch == master_branch and not is_merged:
-    q.put({'command': 'minus', 'parameters': points})
+    q.put({'command': 'minus', 'parameters': points, 'client': sender['login']})
     Message('minus', sender, points)
   elif branch == master_branch and is_merged:
-    q.put({'command': 'plus', 'parameters': 3})
+    q.put({'command': 'plus', 'parameters': 3, 'client': sender['login']})
     Message('plus', sender, 3)
   else:
-    q.put({'command': 'plus', 'parameters': points})
+    q.put({'command': 'plus', 'parameters': points, 'client': sender['login']})
     Message('plus', sender, points)
 
 def create(sender):
-  q.put({'command': 'plus', 'parameters': 2})
+  q.put({'command': 'plus', 'parameters': 2, 'client': sender['login']})
   Message('plus', sender, 2)
 
 def pull_request(sender):
-  q.put({'command': 'plus', 'parameters': 2})
+  q.put({'command': 'plus', 'parameters': 2, 'client': sender['login']})
   Message('plus', sender, 2)
 
 def issue_comment(sender):
-  q.put({'command': 'plus', 'parameters': 1})
+  q.put({'command': 'plus', 'parameters': 1, 'client': sender['login']})
   Message('plus', sender, 1)
+
 
 @app.route("/", methods=['GET'])
 def index():
@@ -347,6 +399,8 @@ def index():
 
 @app.route("/endpoint", methods=['GET', 'POST'])
 def endpoint():
+
+  # Check if header is correct
   if request.headers.get('X-GitHub-Event') is None:
     return "X-Github-Event header required", 400;
 
@@ -354,47 +408,103 @@ def endpoint():
 
   # Get JSON from input.
   response = request.get_json()
+
   if event == "push":
+
     push(response)
+
   elif event == "create":
+
     create(response['sender'])
+
   elif event == "pull_request":
+
     pull_request(response['sender'])
+
   elif event == "issue_comment":
+
     issue_comment(response['sender'])
+
   else:
+
     return 'This event is not yet supported', 200
 
   return 'ok', 200
 
-@app.route("/play", methods=['POST'])
-def play():
-  if request.headers.get('Awesome-Security') is None:
-    return "Awesome-Security is enabled", 400;
+@app.route("/interface", methods=['GET'])
+def interface():
 
-  # Get JSON from input.
-  json = request.get_json()
+  # Prepare data
+  templateData = {
+    'value': GITree.getValue() + 1,
+    'max': GITree.settings['num_leds'],
+    'percentage': (float(GITree.getValue() + 1) / float(GITree.settings['num_leds'] )) * 100
+  }
 
+  # Render interface
+  return render_template('interface.html', **templateData)
+
+@socketio.on('connect', namespace='/socket')
+def connect():
+  id = random.getrandbits(128)
+  socketio.emit('message', {'status': 'ok', 'message': 'User {} is online' . format(id)}, namespace='/socket')
+
+@socketio.on('message', namespace='/socket')
+def message(message):
+  socketio.emit('message', {'status': 'default', 'message':  message['text'], 'client': message['id']}, namespace='/socket')
+
+@socketio.on('disconnect', namespace='/socket')
+def disconnect():
+  socketio.emit('message', {'status': 'error', 'message': 'User disconnected'}, namespace='/socket')
+
+@socketio.on('method', namespace='/socket')
+def method(json):
+  print(json)
   availableTypes = [
     'blink',
     'on',
     'off',
     'restore',
     'knightRider',
-    'disco'
+    'disco',
   ]
 
   if json['type'] == 'interrupt':
+
+    # Set global interrupt flag
     global interrupt
     interrupt = True
+
+    # Set response
     message = 'Current order has been interrupted'
+
   elif json['type'] == 'cleanup':
-    q.queue.clear()
+
+    # Manually clean queue up
+    while not q.empty():
+      task = q.get()
+      gevent.sleep(0)
+
+    # Set response
     message = 'Orders queue has been cleaned'
-  elif json['type'] in availableTypes:
-    q.put({'command': json['type'], 'parameters': json})
+
+  elif json['type'] == 'plus' or json['type'] == 'minus':
+    q.put({'command': json['type'], 'parameters': 1})
+
+    # Set message
     message = json['type'] + ' has been queued'
+
+  elif json['type'] in availableTypes:
+
+    # Add task to queue
+    q.put({'command': json['type'], 'parameters': json})
+
+    # Set message
+    message = json['type'] + ' has been queued'
+
   else:
+
+    # Set error message
     error = 'This event is not supported yet'
 
   try:
@@ -408,23 +518,16 @@ def play():
       'message': message
     }
 
-  return jsonify(**response), 200
+  # Send message to all clients
+  socketio.emit('message', response, namespace='/socket')
 
-@app.route("/interface", methods=['GET'])
-def interface():
-  templateData = {
-    'value': GITree.getValue() + 1,
-    'max': GITree.settings['num_leds'],
-    'percentage': (float(GITree.getValue() + 1) / float(GITree.settings['num_leds'] )) * 100
-  }
-  return render_template('interface.html', **templateData)
 
 if __name__ == "__main__":
 
   # define new Christmas tree object
-  GITree = ChristmasTree(q)
+  GITree = ChristmasTree()
 
-  # start a thread
-  GITree.start()
+  thread = gevent.spawn(GITree.run)
 
-  app.run(host='0.0.0.0', port=80, debug=True)
+  # app.run(host='0.0.0.0', port=80, debug=True)
+  socketio.run(app)

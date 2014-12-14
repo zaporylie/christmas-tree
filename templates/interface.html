@@ -7,7 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script src="../static/interface.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    </script>
   </head>
 
   <body>
@@ -22,13 +25,13 @@
       </div>
       <div class="navbar-collapse collapse navbar-inverse-collapse">
         <ul class="nav navbar-nav">
-          <li><a href="#" class="call on">On</a></li>
-          <li><a href="#" class="call off">Off</a></li>
-          <li><a href="#" class="call restore">Restore</a></li>
-          <li><a href="#" class="call interrupt">Kill current process</a></li>
-          <li><a href="#" class="call cleanup">Clean up queue</a></li>
-          <li><a href="#" class="call disco">DiScO</a></li>
-          <li><a href="#" class="call knightrider">Knight Rider</a></li>
+          <li><a href="#" class="method" id="on">On</a></li>
+          <li><a href="#" class="method" id="off">Off</a></li>
+          <li><a href="#" class="method" id="plus">Plus</a></li>
+          <li><a href="#" class="method" id="minus">Minus</a></li>
+          <li><a href="#" class="method" id="restore">Restore</a></li>
+          <li><a href="#" class="method" id="disco">DiScO</a></li>
+          <li><a href="#" class="method" id="knightRider">Knight Rider</a></li>
         </ul>
       </div>
     </div>
@@ -45,6 +48,10 @@
         </div>
         <div class="panel-body" id="console">
         </div>
+      </div>
+      <div class="btn-group btn-group-justified">
+        <a href="#" class="btn btn-primary method" id="interrupt">Kill current process</a>
+        <a href="#" class="btn btn-danger method" id="cleanup">Clean up queue</a>
       </div>
     </div>
   </body>
