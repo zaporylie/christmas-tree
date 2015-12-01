@@ -1,0 +1,5 @@
+#define PIXEL_PIN 13
+#define PIXEL_COUNT 27
+#define PIXEL_OFFSET 4
+
+#define DEFAULT_SHOW 0
