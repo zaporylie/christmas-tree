@@ -80,10 +80,16 @@ void handleSetRandomMode() {
 }
 
 void handleSetValue() {
+  // Define.
+  StaticJsonBuffer<1600> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
   String str;
   int index;
-  // Execute.
+
+  // Change mode.
   currentMode = CUSTOM_SHOW;
+  root["currentMode"] = currentMode;
+
   // Execute.
   for ( uint8_t i = 0; i < server.args(); i++ ) {
     index = server.argName(i).toInt();
@@ -92,18 +98,19 @@ void handleSetValue() {
     }
     index--;
     str = server.arg(i);
-    char r[5] = {0};
-    char g[5] = {0};
-    char b[5] = {0};
-    r[0] = g[0] = b[0] = '0';
-    r[1] = g[1] = b[1] = 'X';
-    r[2] = str[3];
-    r[3] = str[4];
-    g[2] = str[5];
-    g[3] = str[6];
-    b[2] = str[7];
-    b[3] = str[8];
-    setColor(index, strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
+    strip.setPixelColor(index, hexToInt(str));
   }
-  server.send(200, "application/javascript", "OK");
+  strip.show();
+
+  JsonArray& colors = root.createNestedArray("colors");
+
+  // Read values.
+  for ( uint8_t i = 0; i < strip.numPixels(); i++ ) {
+    colors.add(intToHex(strip.getPixelColor(i)));
+  }
+
+  // Print.
+  String temp;
+  root.printTo(temp);
+  server.send(200, "application/javascript", temp);
 }

@@ -3,7 +3,6 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NE
 #define CUSTOM_SHOW -1
 
 int currentMode = DEFAULT_SHOW;
-uint32_t colorBuffer[PIXEL_COUNT];
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
@@ -111,28 +110,37 @@ void theaterChaseRainbow(uint8_t wait) {
   }
 }
 
-void initBuffer() {
-  for (int i=0; i < strip.numPixels(); i++) {
-    colorBuffer[i] = strip.Color(0, 0, 0);
-  }
-}
-
-void setColor(byte n, byte r, byte g, byte b) {
-  colorBuffer[n] = strip.Color(r, g, b);
-}
-
-void custom(uint8_t wait) {
-  for (int i=0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, colorBuffer[i]);    //turn every third pixel on
-  }
+void fallback(uint8_t wait) {
   strip.show();
   delay(wait);
 }
 
+uint32_t hexToInt(String str) {
+  char r[5] = {0};
+  char g[5] = {0};
+  char b[5] = {0};
+
+  r[0] = g[0] = b[0] = '0';
+  r[1] = g[1] = b[1] = 'X';
+
+  r[2] = str[1];
+  r[3] = str[2];
+
+  g[2] = str[3];
+  g[3] = str[4];
+
+  b[2] = str[5];
+  b[3] = str[6];
+
+  return strip.Color(strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
+}
+
+String intToHex(uint32_t color) {
+  return String(color, HEX);
+}
+
 void startShow(int i) {
   switch(i){
-    case -1:custom(50); 
-            break;
     case 0: colorWipe(strip.Color(0, 0, 0), 50);    // Black/off
             break;
     case 1: colorWipe(strip.Color(255, 0, 0), 50);  // Red
@@ -152,6 +160,8 @@ void startShow(int i) {
     case 8: rainbowCycle(20);
             break;
     case 9: theaterChaseRainbow(50);
+            break;
+    default: fallback(20);
             break;
   }
 }

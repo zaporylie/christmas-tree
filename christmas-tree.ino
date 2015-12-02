@@ -18,7 +18,6 @@ void setup() {
   strip.begin();
   strip.show();
   startShow(DEFAULT_SHOW);
-  initBuffer();
 
   WiFiManager wifi;
   wifi.autoConnect("gitree");
@@ -38,7 +37,6 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(currentMode);
   server.handleClient();
   startShow(currentMode);
 }
