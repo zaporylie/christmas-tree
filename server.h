@@ -81,10 +81,16 @@ void handleSetRandomMode() {
 
 void handleSetValue() {
   String str;
+  int index;
   // Execute.
   currentMode = CUSTOM_SHOW;
   // Execute.
   for ( uint8_t i = 0; i < server.args(); i++ ) {
+    index = server.argName(i).toInt();
+    if (index == 0) {
+      continue;
+    }
+    index--;
     str = server.arg(i);
     char r[5] = {0};
     char g[5] = {0};
@@ -97,7 +103,7 @@ void handleSetValue() {
     g[3] = str[6];
     b[2] = str[7];
     b[3] = str[8];
-    setColor(i, strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
+    setColor(index, strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
   }
   server.send(200, "application/javascript", "OK");
 }
