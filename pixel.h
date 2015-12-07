@@ -31,6 +31,37 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
+void pulse(uint16_t n, uint32_t c) {
+  
+  if (n - 3 < strip.numPixels()) {
+    strip.setPixelColor(n - 3, 0);
+  }
+  
+  if (n - 2 >= PIXEL_OFFSET) {
+    strip.setPixelColor(n - 2, c/3);
+  }
+  
+  if (n - 1 >= PIXEL_OFFSET) {
+    strip.setPixelColor(n - 1, c*2/3);
+  }
+  
+  strip.setPixelColor(n, c);
+  
+  if (n + 1 < strip.numPixels()) {
+    strip.setPixelColor(n + 1, c*2/3);
+  }
+  
+  if (n + 2 < strip.numPixels()) {
+    strip.setPixelColor(n + 2, c/3);
+  }
+  
+  if (n + 3 < strip.numPixels()) {
+    strip.setPixelColor(n + 3, 0);
+  }
+  
+  strip.show();
+}
+
 void rainbow(uint8_t wait) {
   uint16_t i, j;
 
@@ -110,6 +141,18 @@ void theaterChaseRainbow(uint8_t wait) {
   }
 }
 
+void knightRider(uint32_t color, uint8_t wait) {
+  colorWipe(0, 0);
+  for (int i = PIXEL_OFFSET; i < strip.numPixels(); i++) {
+    pulse(i, color);
+    delay(wait);
+  }
+  for (int i = strip.numPixels() - 1; i >= PIXEL_OFFSET; i--) {
+    pulse(i, color);
+    delay(wait);
+  }
+}
+
 void fallback(uint8_t wait) {
   strip.show();
   delay(wait);
@@ -160,6 +203,8 @@ void startShow(int i) {
     case 8: rainbowCycle(20);
             break;
     case 9: theaterChaseRainbow(50);
+            break;
+    case 10: knightRider(strip.Color(255, 0, 0), 50);
             break;
     default: fallback(20);
             break;
