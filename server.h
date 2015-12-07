@@ -1,3 +1,7 @@
+/*
+  To upload through terminal you can use: curl -F "image=@christmas-tree.cpp.generic.bin" gitree.local/update
+*/
+
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 
