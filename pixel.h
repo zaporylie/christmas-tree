@@ -3,6 +3,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NE
 #define CUSTOM_SHOW -1
 
 int currentMode = DEFAULT_SHOW;
+int currentLed = 0;
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
@@ -153,6 +154,16 @@ void knightRider(uint32_t color, uint8_t wait) {
   }
 }
 
+void blinkLed(uint16_t wait) {
+  uint32_t c = strip.getPixelColor(currentLed);
+  strip.setPixelColor(currentLed, 0);
+  strip.show();
+  delay(wait);
+  strip.setPixelColor(currentLed, c);
+  strip.show();
+  delay(wait);
+}
+
 void fallback(uint8_t wait) {
   strip.show();
   delay(wait);
@@ -205,6 +216,8 @@ void startShow(int i) {
     case 9: theaterChaseRainbow(50);
             break;
     case 10: knightRider(strip.Color(255, 0, 0), 50);
+            break;
+    case 11: blinkLed(1000);
             break;
     default: fallback(20);
             break;
