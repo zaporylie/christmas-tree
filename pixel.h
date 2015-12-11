@@ -3,7 +3,36 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NE
 #define CUSTOM_SHOW -1
 
 int currentMode = DEFAULT_SHOW;
-int currentLed = 0;
+int currentLed = DEFAULT_LED;
+String currentColor = DEFAULT_COLOR;
+
+uint32_t hexToInt(String str) {
+  char r[5] = {0};
+  char g[5] = {0};
+  char b[5] = {0};
+
+  r[0] = g[0] = b[0] = '0';
+  r[1] = g[1] = b[1] = 'X';
+
+  r[2] = str[0];
+  r[3] = str[1];
+
+  g[2] = str[2];
+  g[3] = str[3];
+
+  b[2] = str[4];
+  b[3] = str[5];
+
+  return strip.Color(strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
+}
+
+String intToHex(uint32_t color) {
+  String buf = String(color, HEX);
+  while (buf.length() < 6) {
+    buf = "0" + buf;
+  }
+  return buf;
+}
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
@@ -21,7 +50,12 @@ uint32_t Wheel(byte WheelPos) {
 }
 
 // Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
+void colorWipe(uint8_t wait, uint32_t c = 0) {
+
+  if (c == 0) {
+    c = hexToInt(currentColor);
+  }
+
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     if (i < PIXEL_OFFSET) {
       continue;
@@ -32,34 +66,38 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
-void pulse(uint16_t n, uint32_t c) {
-  
+void pulse(uint16_t n, uint32_t c = 0) {
+
+  if (c == 0) {
+    c = hexToInt(currentColor);
+  }
+
   if (n - 3 < strip.numPixels()) {
     strip.setPixelColor(n - 3, 0);
   }
-  
+
   if (n - 2 >= PIXEL_OFFSET) {
     strip.setPixelColor(n - 2, c/3);
   }
-  
+
   if (n - 1 >= PIXEL_OFFSET) {
     strip.setPixelColor(n - 1, c*2/3);
   }
-  
+
   strip.setPixelColor(n, c);
-  
+
   if (n + 1 < strip.numPixels()) {
     strip.setPixelColor(n + 1, c*2/3);
   }
-  
+
   if (n + 2 < strip.numPixels()) {
     strip.setPixelColor(n + 2, c/3);
   }
-  
+
   if (n + 3 < strip.numPixels()) {
     strip.setPixelColor(n + 3, 0);
   }
-  
+
   strip.show();
 }
 
@@ -95,7 +133,12 @@ void rainbowCycle(uint8_t wait) {
 }
 
 //Theatre-style crawling lights.
-void theaterChase(uint32_t c, uint8_t wait) {
+void theaterChase(uint8_t wait, uint32_t c = 0) {
+
+  if (c == 0) {
+    c = hexToInt(currentColor);
+  }
+
   for (int j=0; j<10; j++) {  //do 10 cycles of chasing
     for (int q=0; q < 3; q++) {
       for (int i=0; i < strip.numPixels(); i=i+3) {
@@ -142,14 +185,20 @@ void theaterChaseRainbow(uint8_t wait) {
   }
 }
 
-void knightRider(uint32_t color, uint8_t wait) {
-  colorWipe(0, 0);
+void knightRider(uint8_t wait, uint32_t c = 0) {
+
+  if (c == 0) {
+    c = hexToInt(currentColor);
+  }
+
+  colorWipe(0, 1);
+
   for (int i = PIXEL_OFFSET; i < strip.numPixels(); i++) {
-    pulse(i, color);
+    pulse(i, c);
     delay(wait);
   }
   for (int i = strip.numPixels() - 1; i >= PIXEL_OFFSET; i--) {
-    pulse(i, color);
+    pulse(i, c);
     delay(wait);
   }
 }
@@ -169,57 +218,23 @@ void fallback(uint8_t wait) {
   delay(wait);
 }
 
-uint32_t hexToInt(String str) {
-  char r[5] = {0};
-  char g[5] = {0};
-  char b[5] = {0};
-
-  r[0] = g[0] = b[0] = '0';
-  r[1] = g[1] = b[1] = 'X';
-
-  r[2] = str[1];
-  r[3] = str[2];
-
-  g[2] = str[3];
-  g[3] = str[4];
-
-  b[2] = str[5];
-  b[3] = str[6];
-
-  return strip.Color(strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
-}
-
-String intToHex(uint32_t color) {
-  return String(color, HEX);
-}
-
 void startShow(int i) {
   switch(i){
-    case 0: colorWipe(strip.Color(0, 0, 0), 50);    // Black/off
+    case 0: colorWipe(50);
             break;
-    case 1: colorWipe(strip.Color(255, 0, 0), 50);  // Red
+    case 1: blinkLed(1000);
             break;
-    case 2: colorWipe(strip.Color(0, 255, 0), 50);  // Green
+    case 2: knightRider(50);
             break;
-    case 3: colorWipe(strip.Color(0, 0, 255), 50);  // Blue
+    case 3: theaterChase(50);
             break;
-    case 4: theaterChase(strip.Color(127, 127, 127), 50); // White
+    case 4: rainbow(20);
             break;
-    case 5: theaterChase(strip.Color(127,   0,   0), 50); // Red
+    case 5: rainbowCycle(20);
             break;
-    case 6: theaterChase(strip.Color(  0,   0, 127), 50); // Blue
+    case 6: theaterChaseRainbow(50);
             break;
-    case 7: rainbow(20);
-            break;
-    case 8: rainbowCycle(20);
-            break;
-    case 9: theaterChaseRainbow(50);
-            break;
-    case 10: knightRider(strip.Color(255, 0, 0), 50);
-            break;
-    case 11: blinkLed(1000);
-            break;
-    default: fallback(20);
+    default: fallback(5);
             break;
   }
 }

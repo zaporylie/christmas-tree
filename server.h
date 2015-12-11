@@ -23,29 +23,25 @@ void handleNotFound() {
 }
 
 void handleRoot() {
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
-  snprintf(temp, 400,
+ // Define.
+  StaticJsonBuffer<1600> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  char tmp[6];
 
-"<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP8266 Demo</title>\
-    <style>\
-      body { background-color: #00ff00; font-family: Arial, Helvetica, Sans-Serif; Color: #ffffff; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP8266-gitree!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-  </body>\
-</html>",
+  root["currentMode"] = currentMode;
+  root["currentColor"] = currentColor;
+  root["currentLed"] = currentLed;
+  JsonArray& colors = root.createNestedArray("colors");
 
-    hr, min % 60, sec % 60
-  );
-  server.send ( 200, "text/html", temp );
+  // Read values.
+  for ( uint8_t i = 0; i < strip.numPixels(); i++ ) {
+    colors.add(intToHex(strip.getPixelColor(i)));
+  }
+
+  // Print.
+  String temp;
+  root.printTo(temp);
+  server.send(200, "application/javascript", temp);
 }
 
 void handleSetMode() {
@@ -58,9 +54,17 @@ void handleSetMode() {
     if (server.argName(i) == "mode") {
       currentMode = server.arg(i).toInt();
     }
+    if (server.argName(i) == "color") {
+      currentColor = server.arg(i);
+    }
+    if (server.argName(i) == "led") {
+      currentLed = server.arg(i).toInt() - 1;
+    }
   }
   startShow(currentMode);
   root["currentMode"] = currentMode;
+  root["currentColor"] = currentColor;
+  root["currentLed"] = currentLed;
 
   // Print.
   String temp;
@@ -74,8 +78,15 @@ void handleSetRandomMode() {
   JsonObject& root = jsonBuffer.createObject();
 
   // Execute.
-  currentMode = random(0, 9);
+  // Get random mode
+  currentMode = random(-1, 6);
   root["currentMode"] = currentMode;
+  // Get random color.
+  currentColor = intToHex(random(0, 2000));
+  root["currentColor"] = currentColor;
+  // Get random led.
+  currentLed = random(0, strip.numPixels() - 1);
+  root["currentLed"] = currentLed;
 
   // Print.
   String temp;
@@ -85,10 +96,9 @@ void handleSetRandomMode() {
 
 void handleSetValue() {
   // Define.
-  StaticJsonBuffer<1600> jsonBuffer;
+  StaticJsonBuffer<2000> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
-  String str;
-  int index;
+  char tmp[6];
 
   // Change mode.
   currentMode = CUSTOM_SHOW;
@@ -96,13 +106,10 @@ void handleSetValue() {
 
   // Execute.
   for ( uint8_t i = 0; i < server.args(); i++ ) {
-    index = server.argName(i).toInt();
-    if (index == 0) {
+    if (server.argName(i).toInt() == 0) {
       continue;
     }
-    index--;
-    str = server.arg(i);
-    strip.setPixelColor(index, hexToInt(str));
+    strip.setPixelColor(server.argName(i).toInt() - 1, hexToInt(server.arg(i)));
   }
   strip.show();
 
@@ -118,3 +125,4 @@ void handleSetValue() {
   root.printTo(temp);
   server.send(200, "application/javascript", temp);
 }
+
