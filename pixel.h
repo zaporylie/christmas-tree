@@ -132,6 +132,28 @@ void rainbowCycle(uint8_t wait) {
   }
 }
 
+// Slightly different, this makes the rainbow equally distributed throughout
+void aurora(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=80; j<150; j++) {
+    for(i=PIXEL_OFFSET; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(j));
+    }
+    strip.show();
+    delay(wait);
+  }
+
+  for(j=150; j>80; j--) {
+    for(i=PIXEL_OFFSET; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(j));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+
 //Theatre-style crawling lights.
 void theaterChase(uint8_t wait, uint32_t c = 0) {
 
@@ -233,6 +255,8 @@ void startShow(int i) {
     case 5: rainbowCycle(20);
             break;
     case 6: theaterChaseRainbow(50);
+            break;
+    case 7: aurora(100);
             break;
     default: fallback(5);
             break;

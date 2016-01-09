@@ -54,6 +54,9 @@ void handleSetMode() {
     if (server.argName(i) == "mode") {
       currentMode = server.arg(i).toInt();
     }
+    if (server.argName(i) == "wheel") {
+      currentColor = intToHex(Wheel(server.arg(i).toInt()));
+    }
     if (server.argName(i) == "color") {
       currentColor = server.arg(i);
     }

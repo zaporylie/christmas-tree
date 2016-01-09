@@ -3,5 +3,5 @@
 #define PIXEL_OFFSET 4
 
 #define DEFAULT_SHOW 0
-#define DEFAULT_COLOR "00ff00"
+#define DEFAULT_COLOR "D6AB1E"
 #define DEFAULT_LED 4
