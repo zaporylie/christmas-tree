@@ -1,0 +1,145 @@
+{
+  "name": "christmas-tree",
+  "description": "Christmas tree driver",
+  "author": {
+    "name": "zaporylie",
+    "fullname": "Jakub Piasecki",
+    "email": "jakub@piaseccy.pl"
+  },
+  "GET": {
+    "/api": {
+      "fields": {
+        "global": {
+          "mode": {
+            "cardinality": 1,
+            "type": "array",
+            "arguments": [
+              {
+                "key": 0,
+                "value": "colorWipe"
+              },
+              {
+                "key": 1,
+                "value": "blinkLed"
+              },
+              {
+                "key": 2,
+                "value": "knightRider"
+              },
+              {
+                "key": 3,
+                "value": "theaterChase"
+              },
+              {
+                "key": 4,
+                "value": "rainbow"
+              },
+              {
+                "key": 5,
+                "value": "rainbowCycle"
+              },
+              {
+                "key": 6,
+                "value": "theaterChaseRainbow"
+              },
+              {
+                "key": 7,
+                "value": "aurora"
+              },
+              {
+                "key": -1,
+                "value": "fallback"
+              }
+            ],
+            "title": "Current mode"
+          },
+          "color": {
+            "cardinality": 1,
+            "type": "color",
+            "title": "Current LED"
+          },
+          "led": {
+            "cardinality": 1,
+            "type": "integer",
+            "title": "Current LED",
+            "min": 0,
+            "max": ":PIXEL_COUNT"
+          }
+        },
+        "values": {
+          "cardinality": ":PIXEL_COUNT",
+          "type": "color",
+          "title": "Colors"
+        }
+      }
+    }
+  },
+  "POST": {
+    "/api": {
+      "fields": {
+        "global": {
+          "mode": {
+            "cardinality": 1,
+            "type": "array",
+            "arguments": [
+              {
+                "key": 0,
+                "value": "colorWipe"
+              },
+              {
+                "key": 1,
+                "value": "blinkLed"
+              },
+              {
+                "key": 2,
+                "value": "knightRider"
+              },
+              {
+                "key": 3,
+                "value": "theaterChase"
+              },
+              {
+                "key": 4,
+                "value": "rainbow"
+              },
+              {
+                "key": 5,
+                "value": "rainbowCycle"
+              },
+              {
+                "key": 6,
+                "value": "theaterChaseRainbow"
+              },
+              {
+                "key": 7,
+                "value": "aurora"
+              },
+              {
+                "key": -1,
+                "value": "fallback"
+              }
+            ],
+            "title": "Current mode"
+          },
+          "color": {
+            "cardinality": 1,
+            "type": "color",
+            "title": "Current LED"
+          },
+          "led": {
+            "cardinality": 1,
+            "type": "integer",
+            "title": "Current LED",
+            "min": 0,
+            "max": ":PIXEL_COUNT"
+          }
+        },
+        "values": {
+          "cardinality": ":PIXEL_COUNT",
+          "type": "color",
+          "title": "Colors"
+        }
+      }
+    }
+  }
+}
