@@ -26,11 +26,10 @@ void setup() {
     Serial.println("MDNS responder started");
   }
 
-  server.on ( "/", handleRoot );
-  server.on ( "/autoDiscover", handleAutoDiscover );
-  server.on ( "/setRandomMode", handleSetRandomMode );
-  server.on ( "/setMode", handleSetMode );
-  server.on ( "/setValue", handleSetValue );
+  server.on ( "/", HTTP_GET, handleStatus );
+  server.on ( "/espstack/status", HTTP_GET, handleStatus );
+  server.on ( "/api", HTTP_GET, handleGet );
+  server.on ( "/api", HTTP_POST, handlePost );
   server.onNotFound ( handleNotFound );
   httpUpdater.setup(&server);
   server.begin();

@@ -22,122 +22,99 @@ void handleNotFound() {
   server.send ( 404, "text/plain", message );
 }
 
-void handleAutoDiscover() {
-  StaticJsonBuffer<1600> jsonBuffer;
+void handleStatus() {
+  StaticJsonBuffer<2000> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
   root["hostname"] = HOSTNAME;
   root["repository"] = REPOSITORY;
 
+  JsonObject& settings = root.createNestedObject("settings");
+
+  settings["PIXEL_COUNT"] = PIXEL_COUNT;
+  settings["PIXEL_OFFSET"] = PIXEL_OFFSET;
+  settings["DEFAULT_SHOW"] = DEFAULT_SHOW;
+  settings["DEFAULT_COLOR"] = DEFAULT_COLOR;
+  settings["DEFAULT_LED"] = DEFAULT_LED;
+
   String temp;
   root.printTo(temp);
-  server.send(200, "application/javascript", temp);
+  server.send(200, "application/json", temp);
 }
 
-void handleRoot() {
- // Define.
-  StaticJsonBuffer<1600> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-  char tmp[6];
-
-  root["currentMode"] = currentMode;
-  root["currentColor"] = currentColor;
-  root["currentLed"] = currentLed;
-  JsonArray& colors = root.createNestedArray("colors");
-
-  // Read values.
-  for ( uint8_t i = 0; i < strip.numPixels(); i++ ) {
-    colors.add(intToHex(strip.getPixelColor(i)));
-  }
-
-  // Print.
-  String temp;
-  root.printTo(temp);
-  server.send(200, "application/javascript", temp);
-}
-
-void handleSetMode() {
-  // Define.
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-
-  // Execute.
-  for ( uint8_t i = 0; i < server.args(); i++ ) {
-    if (server.argName(i) == "mode") {
-      currentMode = server.arg(i).toInt();
-    }
-    if (server.argName(i) == "wheel") {
-      currentColor = intToHex(Wheel(server.arg(i).toInt()));
-    }
-    if (server.argName(i) == "color") {
-      currentColor = server.arg(i);
-    }
-    if (server.argName(i) == "led") {
-      currentLed = server.arg(i).toInt() - 1;
-    }
-  }
-  startShow(currentMode);
-  root["currentMode"] = currentMode;
-  root["currentColor"] = currentColor;
-  root["currentLed"] = currentLed;
-
-  // Print.
-  String temp;
-  root.printTo(temp);
-  server.send(200, "application/javascript", temp);
-}
-
-void handleSetRandomMode() {
-  // Define.
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-
-  // Execute.
-  // Get random mode
-  currentMode = random(-1, 6);
-  root["currentMode"] = currentMode;
-  // Get random color.
-  currentColor = intToHex(random(0, 2000));
-  root["currentColor"] = currentColor;
-  // Get random led.
-  currentLed = random(0, strip.numPixels() - 1);
-  root["currentLed"] = currentLed;
-
-  // Print.
-  String temp;
-  root.printTo(temp);
-  server.send(200, "application/javascript", temp);
-}
-
-void handleSetValue() {
+void parseData(String data) {
   // Define.
   StaticJsonBuffer<2000> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-  char tmp[6];
+  // Parse incoming JSON.
+  JsonObject& parsed = jsonBuffer.parseObject(data);
 
-  // Change mode.
-  currentMode = CUSTOM_SHOW;
-  root["currentMode"] = currentMode;
+  if (parsed.containsKey("global")) {
+    JsonObject& global = parsed["global"];
 
-  // Execute.
-  for ( uint8_t i = 0; i < server.args(); i++ ) {
-    if (server.argName(i).toInt() == 0) {
-      continue;
+    if (global.containsKey("mode")) {
+      currentMode = global["mode"].as<int>();
+      Serial.println(currentMode);
     }
-    strip.setPixelColor(server.argName(i).toInt() - 1, hexToInt(server.arg(i)));
+
+   if (global.containsKey("color")) {
+      Serial.println(currentColor);
+      Serial.println(global["color"].asString());
+      currentColor = global["color"].asString();
+      Serial.println(currentColor);
+    }
+
+    if (global.containsKey("led")) {
+      currentLed = global["led"].as<int>();;
+      Serial.println(currentLed);
+    }
   }
-  strip.show();
 
-  JsonArray& colors = root.createNestedArray("colors");
+  if (parsed.containsKey("values")) {
+    JsonArray& values = parsed["values"].asArray();
+    for (int i = 0; i < sizeof(values); i++) {
+      Serial.println(i);
+      strip.setPixelColor(i, hexToInt(values[i]));
+    }
+  }
+}
 
+JsonObject& getCurrentState() {
+  StaticJsonBuffer<2000> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+
+  JsonArray& values = root.createNestedArray("values");
   // Read values.
   for ( uint8_t i = 0; i < strip.numPixels(); i++ ) {
-    colors.add(intToHex(strip.getPixelColor(i)));
+    // Add values to array.
+    values.add(intToHex(strip.getPixelColor(i)));
   }
+
+  JsonObject& global = root.createNestedObject("global");
+  global.set("mode", currentMode);
+  global.set("color", currentColor);
+  global.set("led", currentLed);
+
+  return root;
+}
+
+void handleGet() {
+  JsonObject& root = getCurrentState();
 
   // Print.
   String temp;
   root.printTo(temp);
-  server.send(200, "application/javascript", temp);
+  server.send(200, "application/json", temp);
+}
+
+void handlePost() {
+
+  // Parse request.
+  parseData(server.arg(0));
+
+  // Prepare response.
+  JsonObject& root = getCurrentState();
+  String temp;
+  root.printTo(temp);
+  server.send(200, "application/json", temp);
 }
 
