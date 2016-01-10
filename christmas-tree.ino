@@ -20,13 +20,14 @@ void setup() {
   startShow(DEFAULT_SHOW);
 
   WiFiManager wifi;
-  wifi.autoConnect("gitree");
+  wifi.autoConnect(HOSTNAME);
 
-  if ( MDNS.begin("gitree") ) {
+  if ( MDNS.begin(HOSTNAME) ) {
     Serial.println("MDNS responder started");
   }
 
   server.on ( "/", handleRoot );
+  server.on ( "/autoDiscover", handleAutoDiscover );
   server.on ( "/setRandomMode", handleSetRandomMode );
   server.on ( "/setMode", handleSetMode );
   server.on ( "/setValue", handleSetValue );

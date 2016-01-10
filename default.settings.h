@@ -1,3 +1,6 @@
+#define HOSTNAME "gitree"
+#define REPOSITORY "https://github.com/zaporylie/christmas-tree"
+
 #define PIXEL_PIN 13
 #define PIXEL_COUNT 27
 #define PIXEL_OFFSET 4

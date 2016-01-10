@@ -22,6 +22,18 @@ void handleNotFound() {
   server.send ( 404, "text/plain", message );
 }
 
+void handleAutoDiscover() {
+  StaticJsonBuffer<1600> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+
+  root["hostname"] = HOSTNAME;
+  root["repository"] = REPOSITORY;
+
+  String temp;
+  root.printTo(temp);
+  server.send(200, "application/javascript", temp);
+}
+
 void handleRoot() {
  // Define.
   StaticJsonBuffer<1600> jsonBuffer;
