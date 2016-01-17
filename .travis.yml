@@ -36,6 +36,9 @@ cache:
 install:
     - pip install -U platformio
 
+before_script:
+    - cp src/default.settings.h src/settings.h
+
 script:
     - platformio run
 
