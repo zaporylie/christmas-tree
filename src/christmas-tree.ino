@@ -1,11 +1,11 @@
-#include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
-#include <WiFiManager.h> 
+#include <WiFiManager.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include "settings.h"
