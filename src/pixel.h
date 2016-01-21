@@ -2,6 +2,9 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NE
 
 #define CUSTOM_SHOW -1
 
+const int FPS = 48;
+const int FPS_TIME = (int) 1000/FPS;
+
 int currentMode = DEFAULT_SHOW;
 int currentLed = DEFAULT_LED;
 String currentColor = DEFAULT_COLOR;
@@ -34,6 +37,15 @@ String intToHex(uint32_t color) {
   return buf;
 }
 
+uint8_t splitColor ( uint32_t c, char value ) {
+  switch ( value ) {
+    case 'r': return (uint8_t)(c >> 16);
+    case 'g': return (uint8_t)(c >>  8);
+    case 'b': return (uint8_t)(c >>  0);
+    default:  return 0;
+  }
+}
+
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
@@ -49,21 +61,43 @@ uint32_t Wheel(byte WheelPos) {
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
-// Fill the dots one after the other with a color
-void colorWipe(uint8_t wait, uint32_t c = 0) {
+void animateChange(uint8_t steps, uint32_t& color) {
+  // Interate in "steps" number of steps.
+  for (uint8_t step=0; step < steps; step++) {
 
-  if (c == 0) {
-    c = hexToInt(currentColor);
-  }
+    // Change value for each pixel in chain.
+    for(uint16_t i = PIXEL_OFFSET; i < strip.numPixels(); i++) {
 
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    if (i < PIXEL_OFFSET) {
-      continue;
+      // Get current color for pixel.
+      uint32_t c = strip.getPixelColor(i);
+
+      uint8_t r_offset = (splitColor(color, 'r') - splitColor(c, 'r'))/(steps-step);// ((color - c) / steps) * step;
+      uint8_t g_offset = (splitColor(color, 'g') - splitColor(c, 'g'))/(steps-step);
+      uint8_t b_offset = (splitColor(color, 'b') - splitColor(c, 'b'))/(steps-step);
+      strip.setPixelColor(i, splitColor(c, 'r') + r_offset, splitColor(c, 'g') + g_offset, splitColor(c, 'b') + b_offset);
     }
-    strip.setPixelColor(i, c);
+
+    // Set new settings to chain.
     strip.show();
-    delay(wait);
+
+    // Delay for one frame.
+    delay(FPS_TIME);
   }
+}
+
+// Fill the dots one after the other with a color
+void colorWipe(uint8_t t, uint32_t& color) {
+  animateChange(t/FPS_TIME, color);
+}
+
+void colorWipe(uint8_t t) {
+  uint32_t color = hexToInt(currentColor);
+  animateChange(t/FPS_TIME, color);
+}
+
+void colorWipe() {
+  uint32_t color = hexToInt(currentColor);
+  animateChange(1000/FPS_TIME, color);
 }
 
 void pulse(uint16_t n, uint32_t c = 0) {
@@ -207,13 +241,11 @@ void theaterChaseRainbow(uint8_t wait) {
   }
 }
 
-void knightRider(uint8_t wait, uint32_t c = 0) {
+void knightRider(uint8_t wait) {
 
-  if (c == 0) {
-    c = hexToInt(currentColor);
-  }
+  uint32_t c = hexToInt(currentColor);
 
-  colorWipe(0, 1);
+  strip.clear();
 
   for (int i = PIXEL_OFFSET; i < strip.numPixels(); i++) {
     pulse(i, c);
@@ -242,13 +274,13 @@ void fallback(uint8_t wait) {
 
 void startShow(int i) {
   switch(i){
-    case 0: colorWipe(50);
+    case 0: colorWipe();
             break;
     case 1: blinkLed(1000);
             break;
-    case 2: knightRider(50);
+    case 2: knightRider(5);
             break;
-    case 3: theaterChase(50);
+    case 3: theaterChase(5);
             break;
     case 4: rainbow(20);
             break;

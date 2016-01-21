@@ -22,7 +22,9 @@ void handleNotFound() {
 }
 
 void handleStatus() {
-  StaticJsonBuffer<2000> jsonBuffer;
+  const int BUFFER_SIZE = JSON_OBJECT_SIZE(11);
+  Serial.println(BUFFER_SIZE);
+  StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
   root["hostname"] = HOSTNAME;
@@ -35,6 +37,8 @@ void handleStatus() {
   settings["DEFAULT_SHOW"] = DEFAULT_SHOW;
   settings["DEFAULT_COLOR"] = DEFAULT_COLOR;
   settings["DEFAULT_LED"] = DEFAULT_LED;
+  settings["FPS"] = FPS;
+  settings["FPS_TIME"] = FPS_TIME;
 
   String temp;
   root.printTo(temp);
@@ -43,7 +47,7 @@ void handleStatus() {
 
 void parseData(String data) {
   // Define.
-  StaticJsonBuffer<2000> jsonBuffer;
+  StaticJsonBuffer<1000> jsonBuffer;
   // Parse incoming JSON.
   JsonObject& parsed = jsonBuffer.parseObject(data);
 
@@ -116,4 +120,3 @@ void handlePost() {
   root.printTo(temp);
   server.send(200, "application/json", temp);
 }
-
