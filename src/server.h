@@ -3,7 +3,6 @@
 */
 
 ESP8266WebServer server(80);
-ESP8266HTTPUpdateServer httpUpdater;
 
 void handleNotFound() {
   String message = "File Not Found\n\n";
