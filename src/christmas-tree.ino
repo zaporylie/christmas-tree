@@ -17,7 +17,9 @@
 void setup() {
   Serial.begin(115200);
   strip.begin();
+  strip.clear();
   strip.show();
+  fillNextFrame(hexToInt(currentColor));
   startShow(DEFAULT_SHOW);
 
   WiFiManager wifi;

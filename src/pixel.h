@@ -9,6 +9,23 @@ int currentMode = DEFAULT_SHOW;
 int currentLed = DEFAULT_LED;
 String currentColor = DEFAULT_COLOR;
 
+uint32_t nextFrame[PIXEL_COUNT];
+
+void fillNextFrame(uint32_t color) {
+  for (uint16_t i = 0; i < strip.numPixels(); i++) {
+    nextFrame[i] = color;
+  }
+}
+
+byte splitColor ( uint32_t c, char value ) {
+  switch ( value ) {
+    case 'r': return (uint8_t)(c >> 16);
+    case 'g': return (uint8_t)(c >>  8);
+    case 'b': return (uint8_t)(c >>  0);
+    default:  return 0;
+  }
+}
+
 uint32_t hexToInt(String str) {
   char r[5] = {0};
   char g[5] = {0};
@@ -30,20 +47,11 @@ uint32_t hexToInt(String str) {
 }
 
 String intToHex(uint32_t color) {
-  String buf = String(color, HEX);
-  while (buf.length() < 6) {
-    buf = "0" + buf;
+  String string = String(color, HEX);
+  while (string.length() < 6) {
+    string = String("0") + string;
   }
-  return buf;
-}
-
-uint8_t splitColor ( uint32_t c, char value ) {
-  switch ( value ) {
-    case 'r': return (uint8_t)(c >> 16);
-    case 'g': return (uint8_t)(c >>  8);
-    case 'b': return (uint8_t)(c >>  0);
-    default:  return 0;
-  }
+  return string;
 }
 
 // Input a value 0 to 255 to get a color value.
@@ -59,6 +67,30 @@ uint32_t Wheel(byte WheelPos) {
   }
   WheelPos -= 170;
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
+void animateChange(uint8_t steps, uint32_t* color) {
+  // Interate in "steps" number of steps.
+  for (uint8_t step=0; step < steps; step++) {
+
+    // Change value for each pixel in chain.
+    for(uint16_t i = PIXEL_OFFSET; i < strip.numPixels(); i++) {
+
+      // Get current color for pixel.
+      uint32_t c = strip.getPixelColor(i);
+
+      uint8_t r_offset = (splitColor(color[i], 'r') - splitColor(c, 'r'))/(steps-step);// ((color - c) / steps) * step;
+      uint8_t g_offset = (splitColor(color[i], 'g') - splitColor(c, 'g'))/(steps-step);
+      uint8_t b_offset = (splitColor(color[i], 'b') - splitColor(c, 'b'))/(steps-step);
+      strip.setPixelColor(i, splitColor(c, 'r') + r_offset, splitColor(c, 'g') + g_offset, splitColor(c, 'b') + b_offset);
+    }
+
+    // Set new settings to chain.
+    strip.show();
+
+    // Delay for one frame.
+    delay(FPS_TIME);
+  }
 }
 
 void animateChange(uint8_t steps, uint32_t& color) {
@@ -91,13 +123,11 @@ void colorWipe(uint8_t t, uint32_t& color) {
 }
 
 void colorWipe(uint8_t t) {
-  uint32_t color = hexToInt(currentColor);
-  animateChange(t/FPS_TIME, color);
+  animateChange(t/FPS_TIME, nextFrame);
 }
 
 void colorWipe() {
-  uint32_t color = hexToInt(currentColor);
-  animateChange(1000/FPS_TIME, color);
+  animateChange(1000/FPS_TIME, nextFrame);
 }
 
 void pulse(uint16_t n, uint32_t c = 0) {
@@ -187,60 +217,6 @@ void aurora(uint8_t wait) {
   }
 }
 
-
-//Theatre-style crawling lights.
-void theaterChase(uint8_t wait, uint32_t c = 0) {
-
-  if (c == 0) {
-    c = hexToInt(currentColor);
-  }
-
-  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
-    for (int q=0; q < 3; q++) {
-      for (int i=0; i < strip.numPixels(); i=i+3) {
-        if (i+q < PIXEL_OFFSET) {
-          continue;
-        }
-        strip.setPixelColor(i+q, c);    //turn every third pixel on
-      }
-      strip.show();
-
-      delay(wait);
-
-      for (int i=0; i < strip.numPixels(); i=i+3) {
-        if (i+q < PIXEL_OFFSET) {
-          continue;
-        }
-        strip.setPixelColor(i+q, 0);        //turn every third pixel off
-      }
-    }
-  }
-}
-
-//Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
-  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-    for (int q=0; q < 3; q++) {
-      for (int i=0; i < strip.numPixels(); i=i+3) {
-        if (i+q < PIXEL_OFFSET) {
-          continue;
-        }
-        strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-      }
-      strip.show();
-
-      delay(wait);
-
-      for (int i=0; i < strip.numPixels(); i=i+3) {
-        if (i+q < PIXEL_OFFSET) {
-          continue;
-        }
-        strip.setPixelColor(i+q, 0);        //turn every third pixel off
-      }
-    }
-  }
-}
-
 void knightRider(uint8_t wait) {
 
   uint32_t c = hexToInt(currentColor);
@@ -273,24 +249,16 @@ void fallback(uint8_t wait) {
 }
 
 void startShow(int i) {
-  switch(i){
+  switch (i) {
     case 0: colorWipe();
             break;
-    case 1: blinkLed(1000);
-            break;
     case 2: knightRider(5);
-            break;
-    case 3: theaterChase(5);
             break;
     case 4: rainbow(20);
             break;
     case 5: rainbowCycle(20);
             break;
-    case 6: theaterChaseRainbow(50);
-            break;
     case 7: aurora(100);
-            break;
-    default: fallback(5);
             break;
   }
 }
