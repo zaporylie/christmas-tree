@@ -45,78 +45,61 @@ void handleStatus() {
   server.send(200, "application/json", temp);
 }
 
-void parseData(String data) {
+void parseData(String json) {
   // Define.
-  StaticJsonBuffer<1000> jsonBuffer;
+  StaticJsonBuffer<3000> jsonBuffer;
   // Parse incoming JSON.
-  JsonObject& parsed = jsonBuffer.parseObject(data);
+  JsonObject& parsed = jsonBuffer.parseObject(json);
 
-  if (parsed.containsKey("global")) {
-    JsonObject& global = parsed["global"];
+  if (parsed.containsKey("mode")) {
+    currentMode = parsed["mode"].as<int>();
+    Serial.println(currentMode);
+  }
 
-    if (global.containsKey("mode")) {
-      currentMode = global["mode"].as<int>();
-      Serial.println(currentMode);
-    }
-
-   if (global.containsKey("color")) {
-      Serial.println(currentColor);
-      Serial.println(global["color"].asString());
-      currentColor = global["color"].asString();
-      Serial.println(currentColor);
-    }
-
-    if (global.containsKey("led")) {
-      currentLed = global["led"].as<int>();;
-      Serial.println(currentLed);
-    }
+ if (parsed.containsKey("color")) {
+    fillNextFrame(hexToInt(parsed["color"].asString()));
   }
 
   if (parsed.containsKey("values")) {
-    JsonArray& values = parsed["values"].asArray();
-    for (int i = 0; i < sizeof(values); i++) {
-      Serial.println(i);
-      strip.setPixelColor(i, hexToInt(values[i]));
+    Serial.println("values");
+    JsonArray& values = parsed["values"].as<JsonArray&>();
+    uint16_t i = 0;
+    for (JsonArray::iterator it=values.begin(); it!=values.end(); ++it) {
+      // uint32_t color = hexToInt(values[i].asString());
+      // Serial.println(color);
+      nextFrame[i] = hexToInt(it->asString());
+      i++;
     }
   }
 }
 
-JsonObject& getCurrentState() {
-  StaticJsonBuffer<2000> jsonBuffer;
+String getCurrentState() {
+  StaticJsonBuffer<3000> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
+  root.set("mode", currentMode);
+
   JsonArray& values = root.createNestedArray("values");
+
   // Read values.
-  for ( uint8_t i = 0; i < strip.numPixels(); i++ ) {
+  for ( uint16_t i = 0; i < strip.numPixels(); i++ ) {
+    // Serial.println(i);
     // Add values to array.
-    values.add(intToHex(strip.getPixelColor(i)));
+    String buf = intToHex(strip.getPixelColor(i));
+    values.add(buf);
   }
 
-  JsonObject& global = root.createNestedObject("global");
-  global.set("mode", currentMode);
-  global.set("color", currentColor);
-  global.set("led", currentLed);
-
-  return root;
+  String temp;
+  root.printTo(temp);
+  return temp;
 }
 
 void handleGet() {
-  JsonObject& root = getCurrentState();
-
-  // Print.
-  String temp;
-  root.printTo(temp);
-  server.send(200, "application/json", temp);
+  server.send(200, "application/json", getCurrentState());
 }
 
 void handlePost() {
-
   // Parse request.
   parseData(server.arg(0));
-
-  // Prepare response.
-  JsonObject& root = getCurrentState();
-  String temp;
-  root.printTo(temp);
-  server.send(200, "application/json", temp);
+  server.send(200, "application/json", getCurrentState());
 }
