@@ -1,4 +1,3 @@
-#include <Adafruit_NeoPixel.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
@@ -16,11 +15,8 @@
 
 void setup() {
   Serial.begin(115200);
-  strip.begin();
-  strip.clear();
-  strip.show();
-  fillNextFrame(hexToInt(currentColor));
-  startShow(DEFAULT_SHOW);
+
+  animation1.init(animation1.toInt(DEFAULT_COLOR));
 
   WiFiManager wifi;
   wifi.autoConnect(HOSTNAME);
@@ -61,5 +57,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  startShow(currentMode);
+  animation1.animate();
 }

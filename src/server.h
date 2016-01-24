@@ -33,59 +33,70 @@ void handleStatus() {
   JsonObject& settings = root.createNestedObject("settings");
 
   settings["PIXEL_COUNT"] = PIXEL_COUNT;
-  settings["PIXEL_OFFSET"] = PIXEL_OFFSET;
-  settings["DEFAULT_SHOW"] = DEFAULT_SHOW;
   settings["DEFAULT_COLOR"] = DEFAULT_COLOR;
-  settings["DEFAULT_LED"] = DEFAULT_LED;
-  settings["FPS"] = FPS;
-  settings["FPS_TIME"] = FPS_TIME;
 
   String temp;
   root.printTo(temp);
   server.send(200, "application/json", temp);
 }
 
-void parseData(String json) {
+bool parseData(String json) {
   // Define.
   StaticJsonBuffer<3000> jsonBuffer;
   // Parse incoming JSON.
-  JsonObject& parsed = jsonBuffer.parseObject(json);
+  JsonObject& incoming = jsonBuffer.parseObject(json);
 
-  if (parsed.containsKey("mode")) {
-    currentMode = parsed["mode"].as<int>();
-    Serial.println(currentMode);
+  if (!incoming.success()) {
+    return false;
   }
 
- if (parsed.containsKey("color")) {
-    fillNextFrame(hexToInt(parsed["color"].asString()));
+  // Strip.
+  Adafruit_NeoPixel* strip = animation1.getStrip();
+
+  if (incoming.containsKey("program")) {
+    // currentMode = incoming["mode"].as<int>();
+    animation1.setProgram(static_cast<AnimationProgram>(incoming["program"].as<int>()));
   }
 
-  if (parsed.containsKey("values")) {
+  if (incoming.containsKey("color")) {
+    animation1.setColor(animation1.toInt(incoming["color"].asString()));
+  }
+
+  if (incoming.containsKey("brightness")) {
+    strip->setBrightness(incoming["brightness"].as<uint8_t>());
+  }
+
+  if (incoming.containsKey("values")) {
+
     Serial.println("values");
-    JsonArray& values = parsed["values"].as<JsonArray&>();
+    JsonArray& values = incoming["values"].as<JsonArray&>();
     uint16_t i = 0;
-    for (JsonArray::iterator it=values.begin(); it!=values.end(); ++it) {
+    for (JsonArray::iterator it=values.begin(); (it!=values.end()) && (i < strip->numPixels()); ++it) {
       // uint32_t color = hexToInt(values[i].asString());
       // Serial.println(color);
-      nextFrame[i] = hexToInt(it->asString());
+      animation1.setDefaultFrameByIndex(i, animation1.toInt(it->asString()));
       i++;
     }
   }
+  return true;
 }
 
 String getCurrentState() {
   StaticJsonBuffer<3000> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
-  root.set("mode", currentMode);
+  root.set("program", (int)animation1.getProgram());
+  root.set("brightness", animation1.getStrip()->getBrightness());
 
   JsonArray& values = root.createNestedArray("values");
 
+  Adafruit_NeoPixel* strip = animation1.getStrip();
+
   // Read values.
-  for ( uint16_t i = 0; i < strip.numPixels(); i++ ) {
-    // Serial.println(i);
+  for (uint16_t i = 0; i < strip->numPixels(); i++) {
     // Add values to array.
-    String buf = intToHex(strip.getPixelColor(i));
+    char buf[7];
+    animation1.toHex(buf, strip->getPixelColor(i));
     values.add(buf);
   }
 
@@ -100,6 +111,8 @@ void handleGet() {
 
 void handlePost() {
   // Parse request.
-  parseData(server.arg(0));
+  if (!parseData(server.arg(0))) {
+    server.send(400, "application/json", "Invalid json");
+  }
   server.send(200, "application/json", getCurrentState());
 }
