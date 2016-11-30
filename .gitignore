@@ -1,9 +1,7 @@
-// No binaries.
-*.bin
-
 .pioenvs
 .clang_complete
 .gcc-flags.json
+// No binaries.
+*.bin
 .piolibdeps
-
 settings.h
