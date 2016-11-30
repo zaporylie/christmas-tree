@@ -50,13 +50,12 @@ uint32_t Animation::toInt(const char* array) {
   return _strip->Color(strtol(r, NULL, 16), strtol(g, NULL, 16), strtol(b, NULL, 16));
 }
 
-void Animation::toHex(char* buf, uint32_t color) {
+String Animation::toHex(uint32_t color) {
   String string = String(color, HEX);
   while (string.length() < 6) {
     string = String("0") + string;
   }
-  string.toCharArray(buf, 7);
-  Serial.println(buf);
+  return string;
 }
 
 Adafruit_NeoPixel* Animation::getStrip() {
@@ -91,7 +90,7 @@ void Animation::animate(bool blocking) {
         break;
 
       case COLOR:
-        toDefaultFrame(1000);
+        toDefaultFrame(500);
         break;
 
       default:
@@ -135,6 +134,10 @@ void Animation::setDefaultFrameByColor(uint32_t color) {
 
 void Animation::setDefaultFrameByIndex(uint16_t index, uint32_t color) {
   defaultFrame[index] = color;
+}
+
+uint32_t Animation::getDefaultFrameByIndex(uint16_t index) {
+  return *(defaultFrame + index);
 }
 
 void Animation::color() {

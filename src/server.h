@@ -1,8 +1,16 @@
-/*
-  To upload through terminal you can use: curl -F "image=@christmas-tree.cpp.generic.bin" gitree.local/update
-*/
+#include <ArduinoJson.h>
+#include <ESP8266WebServer.h>
+#include <WebSocketsServer.h>
+#include <Hash.h>
 
 ESP8266WebServer server(80);
+WebSocketsServer webSocket = WebSocketsServer(81);
+
+static bool str_to_uint16(const char *str, uint16_t *res) {
+  long int val = strtol(str, NULL, 10);
+  *res = (uint16_t) val;
+  return true;
+}
 
 void handleNotFound() {
   String message = "File Not Found\n\n";
@@ -42,9 +50,11 @@ void handleStatus() {
 
 bool parseData(String json) {
   // Define.
-  StaticJsonBuffer<3000> jsonBuffer;
+  DynamicJsonBuffer jsonBuffer;
   // Parse incoming JSON.
   JsonObject& incoming = jsonBuffer.parseObject(json);
+
+  Serial.println(String(ESP.getFreeHeap()));
 
   if (!incoming.success()) {
     return false;
@@ -67,22 +77,38 @@ bool parseData(String json) {
   }
 
   if (incoming.containsKey("values")) {
+    if (incoming["values"].is<JsonArray&>()) {
+      Serial.println("Values is array.");
+      JsonArray& values = incoming["values"].as<JsonArray&>();
+      uint16_t i = 0;
+      for (JsonArray::iterator it=values.begin(); (it!=values.end()) && (i < strip->numPixels()); ++it) {
+        // uint32_t color = hexToInt(values[i].asString());
+        // Serial.println(color);
+        animation1.setDefaultFrameByIndex(i, animation1.toInt(it->asString()));
+        i++;
+      }
+    }
+    if (incoming["values"].is<JsonObject&>()) {
+      Serial.println("Values is object.");
+      JsonObject& values = incoming["values"].as<JsonObject&>();
+      for (JsonObject::iterator it=values.begin(); it!=values.end(); ++it) {
+        // uint32_t color = hexToInt(values[i].asString());
+        // Serial.println(color);
+        uint16_t key;
 
-    Serial.println("values");
-    JsonArray& values = incoming["values"].as<JsonArray&>();
-    uint16_t i = 0;
-    for (JsonArray::iterator it=values.begin(); (it!=values.end()) && (i < strip->numPixels()); ++it) {
-      // uint32_t color = hexToInt(values[i].asString());
-      // Serial.println(color);
-      animation1.setDefaultFrameByIndex(i, animation1.toInt(it->asString()));
-      i++;
+        str_to_uint16(it->key, &key);
+
+        Serial.printf("Key %s %d\n", it->key, key);
+        // int value = it->value;
+        animation1.setDefaultFrameByIndex(key, animation1.toInt(it->value.asString()));
+      }
     }
   }
   return true;
 }
 
 String getCurrentState() {
-  StaticJsonBuffer<3000> jsonBuffer;
+  StaticJsonBuffer<2500> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
 
   root.set("program", (int)animation1.getProgram());
@@ -93,10 +119,12 @@ String getCurrentState() {
   Adafruit_NeoPixel* strip = animation1.getStrip();
 
   // Read values.
-  for (uint16_t i = 0; i < strip->numPixels(); i++) {
+  for (uint16_t i=0; i < strip->numPixels(); i++) {
     // Add values to array.
-    char buf[7];
-    animation1.toHex(buf, strip->getPixelColor(i));
+    uint32_t color = animation1.getDefaultFrameByIndex(i);
+    Serial.println(color);
+    String buf = animation1.toHex(color);
+    Serial.println(i);
     values.add(buf);
   }
 
@@ -114,5 +142,49 @@ void handlePost() {
   if (!parseData(server.arg(0))) {
     server.send(400, "application/json", "Invalid json");
   }
+  // webSocket.broadcastTXT(getCurrentState());
   server.send(200, "application/json", getCurrentState());
+}
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
+  switch(type) {
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+
+    case WStype_CONNECTED:
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+
+        // send message to client
+        String info = getCurrentState();
+        webSocket.sendTXT(num, info);
+      }
+      break;
+
+    case WStype_TEXT:
+      {
+        Serial.printf("[%u] get Text: %s\n", num, payload);
+        if(payload[0] == '#') {
+          uint32_t rgb = (uint32_t) strtol((const char *) &payload[1], NULL, 16);
+          animation1.setColor(rgb);
+        }
+        if (payload[0] == '{') {
+          parseData((const char *) &payload[0]);
+        }
+        // send data to all connected clients
+        String info = getCurrentState();
+        webSocket.broadcastTXT(info);
+      }
+      break;
+
+    case WStype_BIN:
+      Serial.printf("[%u] get binary lenght: %u\n", num, lenght);
+      hexdump(payload, lenght);
+
+      // send message to client
+      // webSocket.sendBIN(num, payload, lenght);
+      break;
+  }
 }

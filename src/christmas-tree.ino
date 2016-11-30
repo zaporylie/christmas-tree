@@ -1,8 +1,6 @@
-#include <ArduinoJson.h>
+#include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <EEPROM.h>
 #include <WiFiClient.h>
-#include <ESP8266WebServer.h>
 #include <DNSServer.h>
 #include <WiFiManager.h>
 #include <ESP8266mDNS.h>
@@ -11,7 +9,6 @@
 #include "settings.h"
 #include "pixel.h"
 #include "server.h"
-
 
 void setup() {
   Serial.begin(115200);
@@ -32,6 +29,10 @@ void setup() {
   server.onNotFound ( handleNotFound );
   server.begin();
   Serial.println ( "HTTP server started" );
+
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+  Serial.println ( "WebSocket server started" );
 
   ArduinoOTA.onStart([]() {
     Serial.println("Start");
@@ -56,6 +57,7 @@ void setup() {
 
 void loop() {
   ArduinoOTA.handle();
-  server.handleClient();
+  webSocket.loop();
   animation1.animate();
+  server.handleClient();
 }

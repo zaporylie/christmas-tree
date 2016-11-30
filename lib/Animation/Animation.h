@@ -25,8 +25,10 @@
         setColor(uint32_t),
         setColor(uint32_t*),
         setDefaultFrameByColor(uint32_t),
-        setDefaultFrameByIndex(uint16_t, uint32_t),
-        toHex(char*, uint32_t);
+        setDefaultFrameByIndex(uint16_t, uint32_t);
+
+      String
+        toHex(uint32_t);
 
       AnimationProgram
         getProgram();
@@ -35,6 +37,7 @@
         getStrip();
 
       uint32_t
+        getDefaultFrameByIndex(uint16_t),
         toInt(const char*);
 
       uint8_t
