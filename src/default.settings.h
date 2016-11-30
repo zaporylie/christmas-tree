@@ -5,6 +5,6 @@
 #define PIXEL_COUNT 27
 #define PIXEL_OFFSET 4
 
-#define DEFAULT_SHOW 0
+#define DEFAULT_PROGRAM COLOR
 #define DEFAULT_COLOR "D6AB1E"
 #define DEFAULT_LED 4

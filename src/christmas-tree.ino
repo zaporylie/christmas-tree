@@ -14,6 +14,7 @@ void setup() {
   Serial.begin(115200);
 
   animation1.init(animation1.toInt(DEFAULT_COLOR));
+  animation1.setProgram(DEFAULT_PROGRAM);
 
   WiFiManager wifi;
   wifi.autoConnect(HOSTNAME);
